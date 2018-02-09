@@ -15,6 +15,10 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# import sys
+# # 增加导包路径 , 一般把第0个""空出来
+# sys.path.insert(1, os.path.join(BASE_DIR, 'apps'))
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
@@ -35,6 +39,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 安装应用
+    #  django 用户认证系统规定,安装的应用名称需要和 'AUTH_USER_MODEL = 'users.User'' 单应用
     'users',
     'goods',
     'orders',
@@ -46,6 +52,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    # 默认开启用户认证的中间件 , 用于用户认证, 包括用户是否的登陆
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -58,6 +65,7 @@ ROOT_URLCONF = 'd.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        # 配置模板路径
         'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -103,6 +111,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
+# 配置静态文件加载路径
 STATIC_URL = '/static/'
 
+STATICFILES_DIRS = [
+    # 这句话的意思是默认去找static文件夹下的[和项目同名的=>booktest文件夹非必须]
+    os.path.join(BASE_DIR, 'static')
+]
+
+
+
+# 原因：在settings.py中设置AUTH_USER_MODEL时，编码规则为'应用.用户模型类'
+#  AUTH_USER_MODEL = 'apps.users.User' 不符合规范 只能使用一个点,默认单应用
 AUTH_USER_MODEL = 'users.User'
