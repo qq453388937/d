@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser  # django 自带的校验用户
 from utils.models import BaseModel
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from django.conf import settings

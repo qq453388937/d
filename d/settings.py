@@ -119,8 +119,13 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
 
-
-
 # 原因：在settings.py中设置AUTH_USER_MODEL时，编码规则为'应用.用户模型类'
-#  AUTH_USER_MODEL = 'apps.users.User' 不符合规范 只能使用一个点,默认单应用
+#  AUTH_USER_MODEL = 'apps.users.User' 不符合规范 只能使用一个点,djang默认单应用
 AUTH_USER_MODEL = 'users.User'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # 导入邮件模块
+EMAIL_HOST = 'smtp.qq.com'  # 发邮件主机 smtp.yeah.net
+EMAIL_PORT = 465  # 发邮件端口 wofedmnlmegjcaca 25
+EMAIL_HOST_USER = 'pxd7th@vip.qq.com'  # 授权的邮箱
+EMAIL_HOST_PASSWORD = 'intdvqpzqqfvbjdf'  # 邮箱授权时获得的密码，非注册登录密码
+EMAIL_FROM = '天天生鲜<pxd7th@vip.qq.com>'  # 发件人抬头
