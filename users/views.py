@@ -13,8 +13,8 @@ from django.db import IntegrityError
 # 配置文件的导入
 from django.conf import settings
 # itsdangerous导入  并且起别名
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from itsdangerous import URLSafeSerializer as Serializer
+from itsdangerous import TimedJSONWebSignatureSerializer
+
 
 # Create your views here.
 
@@ -35,20 +35,21 @@ def register(request):
         return HttpResponse("测试")
 
 
-# 类视图
 def send_active_email(to_email, user_name, token):
     """封装发送邮件方法"""
     subject = "天天生鲜用户激活666"  # 标题
-    body = ""  # 文本邮件体
+    body = ""  # 纯文本邮件体写这里
+    from django.conf import settings  # 导入settings
     sender = settings.EMAIL_FROM  # 发件人
     receiver = [to_email]  # 接收人,可以多个
     html_body = '<h1>尊敬的用户 %s, 感谢您注册天天生鲜！</h1>' \
                 '<br/><p>请点击此链接激活您的帐号<a href="http://127.0.0.1:8000/users/active/%s">' \
                 'http://127.0.0.1:8000/users/active/%s</a></p>' % (user_name, token, token)
-    from django.core.mail import send_mail
-    send_mail(subject, body, sender, receiver, html_message=html_body)
+    from django.core.mail import send_mail  # 发送邮件方法
+    send_mail(subject, body, sender, receiver, html_message=html_body)  # html字符串写这里
 
 
+# 类视图
 class RegisterView(View):
     """from django.views.generic import View"""
     """from django.views.generic import View"""
@@ -93,12 +94,15 @@ class RegisterView(View):
 
         # 保存成功后发送邮件激活！
         # 发送邮件http://127.0.0.1/users/active/user_id  user_id 利用签名混淆
-        from django.core.mail import send_mail
-        # token
 
-
-        send_active_email(email, user_name, '')
-        return HttpResponse("测试成功")
+        # s = TimedJSONWebSignatureSerializer(settings.SECRET_KEY, expires_in=3600)
+        # token = s.dumps({"user_id": user.id}).decode() 下面做了封装
+        # 使用itsdangerous签名token
+        token = user.generate_active_token()  # 封装方法返回字符串
+        print("发送邮件开始")
+        send_active_email(email, user_name, token)
+        print("发送邮件成功")
+        return HttpResponse("注册成功! 稍后查看邮件激活!")
 
 
 class ActiveView(View):

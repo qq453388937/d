@@ -1,22 +1,24 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser  # django 自带的校验用户
 from utils.models import BaseModel
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous import TimedJSONWebSignatureSerializer
 from django.conf import settings
+
 
 # Create your models here.
 
 
 class User(AbstractUser, BaseModel):
     """用户"""
+
     class Meta:
         db_table = "df_users"
 
-    # def generate_active_token(self):
-    #     """生成激活令牌"""
-    #     serializer = Serializer(settings.SECRET_KEY, 3600)
-    #     token = serializer.dumps({"confirm": self.id})  # 返回bytes类型
-    #     return token.decode()
+    def generate_active_token(self):
+        """生成激活令牌token"""
+        serializer = TimedJSONWebSignatureSerializer(settings.SECRET_KEY, expires_in=3600)
+        token = serializer.dumps({"user_id": self.id})  # 返回bytes类型
+        return token.decode()  # 转为字符串
 
 
 class Address(BaseModel):
@@ -29,6 +31,3 @@ class Address(BaseModel):
 
     class Meta:
         db_table = "df_address"
-
-
-

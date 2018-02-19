@@ -35,7 +35,7 @@ ret3 = s2.unsign(ret, max_age=5)
 print(ret3)
 
 # 序列化签名
-print('=======================')
+print('============序列化签名===========')
 s3 = Serializer('secret-key')
 ret = s3.dumps([1, 2, 3, 4])
 print(ret)
@@ -43,7 +43,7 @@ ret2 = s3.loads(ret)
 print(ret2)
 
 # 四、带时间戳的序列化：
-print('=======================')
+print('=========带时间戳的序列化==============')
 s4 = TimedSerializer('secret-key')
 ret = s4.dumps([1, 2, 3, 4])
 print(ret)
@@ -66,9 +66,11 @@ print(s.dumps({"name": "pxd", "age": 18}))
 print(s.dumps({"name": "pxd", "age": 18}))  # 一样
 # JSON WEB 签名 带时间戳
 s = TimedJSONWebSignatureSerializer('secret-key', expires_in=5)
-ret = s.dumps({"name": "pxd", "age": 18})
+# ret = s.dumps({"name": "pxd", "age": 18})
+ret = s.dumps({"user_id": "123"})
 time.sleep(4)
+ret2 = s.loads(ret)
 print(s.loads(ret))
-time.sleep(4)
-print(s.loads(ret))
+print(ret2['user_id'])
+
 #
