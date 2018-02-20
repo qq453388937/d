@@ -14,6 +14,10 @@ from django.db import IntegrityError
 from django.conf import settings
 # itsdangerous导入  并且起别名
 from itsdangerous import TimedJSONWebSignatureSerializer
+# 导入celery中的异步方法
+from celery_tasks.tasks import send_active_email  # send_active_email方法和远程服务器方法两份
+# 导入刘琦的异步方法
+# from celery_tasks.tasks_liuqi import send_active_email
 
 
 # Create your views here.
@@ -35,18 +39,18 @@ def register(request):
         return HttpResponse("测试")
 
 
-def send_active_email(to_email, user_name, token):
-    """封装发送邮件方法"""
-    subject = "天天生鲜用户激活666"  # 标题
-    body = ""  # 纯文本邮件体写这里
-    from django.conf import settings  # 导入settings
-    sender = settings.EMAIL_FROM  # 发件人
-    receiver = [to_email]  # 接收人,可以多个
-    html_body = '<h1>尊敬的用户 %s, 感谢您注册天天生鲜！</h1>' \
-                '<br/><p>请点击此链接激活您的帐号<a href="http://127.0.0.1:8000/users/active/%s">' \
-                'http://127.0.0.1:8000/users/active/%s</a></p>' % (user_name, token, token)
-    from django.core.mail import send_mail  # 发送邮件方法
-    send_mail(subject, body, sender, receiver, html_message=html_body)  # html字符串写这里
+# def send_active_email(to_email, user_name, token):
+#     """封装发送邮件方法"""
+#     subject = "天天生鲜用户激活666"  # 标题
+#     body = ""  # 纯文本邮件体写这里
+#     from django.conf import settings  # 导入settings,方便粘贴方法不用考虑引用问题
+#     sender = settings.EMAIL_FROM  # 发件人
+#     receiver = [to_email]  # 接收人,可以多个
+#     html_body = '<h1>尊敬的用户 %s, 感谢您注册天天生鲜！</h1>' \
+#                 '<br/><p>请点击此链接激活您的帐号<a href="http://127.0.0.1:8000/users/active/%s">' \
+#                 'http://127.0.0.1:8000/users/active/%s</a></p>' % (user_name, token, token)
+#     from django.core.mail import send_mail  # 发送邮件方法 方便粘贴方法不用考虑引用问题
+#     send_mail(subject, body, sender, receiver, html_message=html_body)  # html字符串写这里
 
 
 # 类视图
@@ -100,7 +104,10 @@ class RegisterView(View):
         # 使用itsdangerous签名token
         token = user.generate_active_token()  # 封装方法返回字符串
         print("发送邮件开始")
-        send_active_email(email, user_name, token)
+        # send_active_email(email, user_name, token) # 同步的时候调用
+
+        # 正确写法 异步调用
+        send_active_email.delay(email, user_name, token)
         print("发送邮件成功")
         return HttpResponse("注册成功! 稍后查看邮件激活!")
 
@@ -110,4 +117,21 @@ class ActiveView(View):
 
     def get(self, request, token):
         """处理激活请求"""
-        pass
+        from itsdangerous import TimedJSONWebSignatureSerializer
+        from django.conf import settings
+        from itsdangerous import SignatureExpired, BadSignature
+        # 取的时候和expire参数无关,expire只对设置的dumps有效,是一个全新的序列化器
+
+        serializer = TimedJSONWebSignatureSerializer(settings.SECRET_KEY)
+
+        try:
+            dict = serializer.loads(token)
+        except (SignatureExpired, BadSignature) as e:  # 捕获多个异常
+            return HttpResponse("激活失败")
+        user_id = dict.get("user_id", "没取到")
+        print(user_id)
+        user_model = User.objects.get(id=user_id)
+        user_model.is_active = True
+        user_model.save()
+
+        return HttpResponse("激活成功")

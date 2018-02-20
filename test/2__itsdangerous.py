@@ -65,11 +65,17 @@ s = JSONWebSignatureSerializer('secret-key')
 print(s.dumps({"name": "pxd", "age": 18}))
 print(s.dumps({"name": "pxd", "age": 18}))  # 一样
 # JSON WEB 签名 带时间戳
+print('*' * 80)
 s = TimedJSONWebSignatureSerializer('secret-key', expires_in=5)
-# ret = s.dumps({"name": "pxd", "age": 18})
 ret = s.dumps({"user_id": "123"})
-time.sleep(4)
-ret2 = s.loads(ret)
+print(ret)
+time.sleep(5)
+# 取的时候和expire参数无关,expire只对设置的dumps有效,是一个全新的序列化器
+s2 = TimedJSONWebSignatureSerializer('secret-key', expires_in=5)  # , expires_in=5
+# ret = s2.dumps({"user_id": "123"})
+print(ret)
+# time.sleep(1)
+ret2 = s2.loads(ret.decode()+"1")  # 取的时候和expire参数无关,expire只对设置的dumps有效,是一个全新的序列化器
 print(s.loads(ret))
 print(ret2['user_id'])
 

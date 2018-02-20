@@ -16,7 +16,7 @@ class User(AbstractUser, BaseModel):
 
     def generate_active_token(self):
         """生成激活令牌token"""
-        serializer = TimedJSONWebSignatureSerializer(settings.SECRET_KEY, expires_in=3600)
+        serializer = TimedJSONWebSignatureSerializer(settings.SECRET_KEY, expires_in=3600) # 过期时间一小时
         token = serializer.dumps({"user_id": self.id})  # 返回bytes类型
         return token.decode()  # 转为字符串
 

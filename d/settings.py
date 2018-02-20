@@ -45,7 +45,7 @@ INSTALLED_APPS = (
     'goods',
     'orders',
     'cart',
-
+    'djcelery',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -98,9 +98,9 @@ DATABASES = {
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'zh-Hans'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
@@ -130,16 +130,23 @@ AUTH_USER_MODEL = 'users.User'
 # EMAIL_HOST_PASSWORD = 'dailyfresh123'  # 邮箱授权时获得的密码，非注册登录密码
 # EMAIL_FROM = '天天生鲜<dailyfreshzxc@yeah.net>'  # 发件人抬头 天天生鲜<pxd7th@vip.qq.com>
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # 导入邮件模块
-# EMAIL_HOST = 'smtp.163.com'  # 发邮件主机 smtp.yeah.net
-# EMAIL_PORT = 25  # 发邮件端口 wofedmnlmegjcaca 25
-# EMAIL_HOST_USER = '15346566750@163.com'  # 授权的邮箱 pxd7th@vip.qq.com
-# EMAIL_HOST_PASSWORD = 'wy2921481'  # 邮箱授权时获得的密码，非注册登录密码
-# EMAIL_FROM = '天天生鲜<15346566750@163.com>'  # 发件人抬头 天天生鲜<pxd7th@vip.qq.com>
-
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # 导入邮件模块
-EMAIL_HOST = 'smtp.qq.com'  # 发邮件主机 smtp.yeah.net
-EMAIL_PORT = 465  # 发邮件端口 wofedmnlmegjcaca 25
-EMAIL_HOST_USER = '453388937@qq.com'  # 授权的邮箱 pxd7th@vip.qq.com
-EMAIL_HOST_PASSWORD = 'pxd0015193111827'  # 邮箱授权时获得的密码，非注册登录密码
-EMAIL_FROM = '天天生鲜<453388937@qq.com>'  # 发件人抬头 天天生鲜<pxd7th@vip.qq.com>
+EMAIL_HOST = 'smtp.163.com'  # 发邮件主机 smtp.yeah.net
+EMAIL_PORT = 25  # 发邮件端口 wofedmnlmegjcaca 25
+EMAIL_HOST_USER = '15346566750@163.com'  # 授权的邮箱 pxd7th@vip.qq.com
+EMAIL_HOST_PASSWORD = 'wy2921481'  # 邮箱授权时获得的密码，非注册登录密码
+EMAIL_FROM = '天天生鲜<15346566750@163.com>'  # 发件人抬头 天天生鲜<pxd7th@vip.qq.com>
+
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # 导入邮件模块
+# EMAIL_HOST = 'smtp.qq.com'  # 发邮件主机 smtp.yeah.net
+# EMAIL_PORT = 465  # 发邮件端口 wofedmnlmegjcaca 25
+# EMAIL_HOST_USER = '453388937@qq.com'  # 授权的邮箱 pxd7th@vip.qq.com
+# EMAIL_HOST_PASSWORD = 'xviwmcrwncyxbggh'  # 邮箱授权时获得的密码，非注册登录密码
+# EMAIL_FROM = '天天生鲜<453388937@qq.com>'  # 发件人抬头 天天生鲜<pxd7th@vip.qq.com>
+
+
+import djcelery
+
+djcelery.setup_loader()
+BROKER_URL = 'redis://127.0.0.1:6379/7'
+CELERY_IMPORTS = ('celery_tasks.tasks_liuqi')
