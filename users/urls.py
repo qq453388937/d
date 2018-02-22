@@ -10,7 +10,5 @@ urlpatterns = [
     # 类视图注册  如何在正则表达式中调用类视图，用类名.as_view()函数
     url(r"^register$", RegisterView.as_view(), name="register"),
     url(r"^active/(?P<token>.+)$", ActiveView.as_view(), name="active"),
-
-
-
+    url(r"^login", Login.as_view(), name="login"),
 ]

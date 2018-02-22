@@ -15,9 +15,13 @@ from django.conf import settings
 # itsdangerous导入  并且起别名
 from itsdangerous import TimedJSONWebSignatureSerializer
 # 导入celery中的异步方法
-from celery_tasks.tasks import send_active_email  # send_active_email方法和远程服务器方法两份
+# from celery_tasks.tasks import send_active_email  # send_active_email方法和远程服务器方法两份
 # 导入刘琦的异步方法
-# from celery_tasks.tasks_liuqi import send_active_email
+from celery_tasks.tasks_liuqi import send_active_email
+
+
+# 导入rabbitmq 的celery
+# from celery_tasks.tasks_rabbitmq import send_active_email
 
 
 # Create your views here.
@@ -111,6 +115,8 @@ class RegisterView(View):
         print("发送邮件成功")
         return HttpResponse("注册成功! 稍后查看邮件激活!")
 
+        # return redirect(reverse('users:login'))
+
 
 class ActiveView(View):
     """邮件激活"""
@@ -126,7 +132,7 @@ class ActiveView(View):
 
         try:
             dict = serializer.loads(token)
-        except (SignatureExpired, BadSignature) as e:  # 捕获多个异常
+        except (SignatureExpired, BadSignature) as e:  # 捕获多个异常,超时和签名失败
             return HttpResponse("激活失败")
         user_id = dict.get("user_id", "没取到")
         print(user_id)
@@ -134,4 +140,37 @@ class ActiveView(View):
         user_model.is_active = True
         user_model.save()
 
-        return HttpResponse("激活成功")
+        return redirect(reverse('users:login'))
+
+
+class Login(View):
+    def get(self, request):
+        """登陆页面展示"""
+        return render(request, "login.html")
+
+    def post(self, request):
+        """处理登陆逻辑"""
+        from django.contrib.auth import authenticate, login
+        username = request.POST.get('username')
+        password = request.POST.get('pwd')
+        if not all([username, password]):
+            # return render(request, 'login.html', {'err_msg': '用户名密码不能为空'})
+            return redirect(reverse('users:login'))
+        user = authenticate(username=username, password=password)  # django自带校验
+        is_ok = False
+        if user is not None:
+            if user.is_active:
+                login(request, user)
+                is_ok = True
+            else:
+                return render(request, 'login.html', {'err_msg': '用户未激活,请查看邮件激活!'})
+        else:
+            return render(request, 'login.html', {'err_msg': '用户名或密码错误!'})
+        if is_ok:
+            
+            """
+        一键多值,session id 单个,和cookie中sessionid的值一致
+        fd2dac6bce19f55aeb4e267f0ccad4b22a94d338:{"_auth_user_id":"49","_auth_user_backend":"django.contrib.auth.backends.ModelBackend","pxd_name":"\u88f4\u6653\u4e1c666666","_auth_user_hash":"a28292554ea826aa5113a9cf4bd9810b5b4499b8"}
+            """
+            request.session['pxd_name'] = '裴晓东666666'
+            return HttpResponse("ok")
