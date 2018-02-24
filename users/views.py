@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import *
 # 类视图需要
-from django.views.generic import View
+from django.views.generic import View,TemplateView
 # 反向解析
 from django.core.urlresolvers import reverse
 import re
@@ -18,10 +18,14 @@ from itsdangerous import TimedJSONWebSignatureSerializer
 # from celery_tasks.tasks import send_active_email  # send_active_email方法和远程服务器方法两份
 # 导入刘琦的异步方法
 from celery_tasks.tasks_liuqi import send_active_email
-
-
 # 导入rabbitmq 的celery
 # from celery_tasks.tasks_rabbitmq import send_active_email
+
+
+# 导入登陆校验模块的装饰器
+from django.contrib.auth.decorators import login_required
+# 导入工具类模块的登陆校验类
+# from utils.views import MyLoginBaseViewMixin
 
 
 # Create your views here.
@@ -208,37 +212,26 @@ class Logout(View):
         return redirect(reverse('users:login'))  # 退出登陆后进入登录页面
 
 
-from django.contrib.auth.decorators import login_required
-
-
-class MyLoginView(View):
-    """
-    重写asview()
-    哪个类视图需要登陆验证继承MyLoginView即可
-    """
-
-    @classmethod
-    def as_view(cls, **initkwargs):
-        # view = super(SpecialView, self).as_view(cls, **initkwargs)
-        view = super().as_view()
-        return login_required(view)
-
-
+from utils.views import MyLoginBaseViewMixin # 导入工具类模块的登陆校验类
 # @login_required  # 类上面加方法错误!!!
-class Address(MyLoginView):
+class Address(MyLoginBaseViewMixin,View):
     # @login_required  # 方法上加装饰器错误!!!
-    # @classmethod
+    # @classmethod  错误!!!
     # def as_view(cls, **initkwargs):
     #     super(Address, )
 
     def get(self, request):
-        """提供收货地址页面，查询地址信息，提供修改功能渲染"""
+        print(Address.__mro__)
+        """提供收货地址页面，查询地址信息，提供修改功能渲染
         # 原始写法判断用户是否登陆 request.user.is_authenticated() 登陆返回True
-        # if not request.user.is_authenticated():
-        #     return redirect(reverse('users:login'))
-        # else:
-        #     return render(request, 'user_center_site.html')
+        if not request.user.is_authenticated():
+            return redirect(reverse('users:login'))
+        else
+            return render(request,'user_center_site.html')
+        """
         return render(request, 'user_center_site.html')
 
     def post(self, request):
         pass
+
+

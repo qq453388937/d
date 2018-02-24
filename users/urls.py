@@ -13,8 +13,16 @@ urlpatterns = [
     url(r"^active/(?P<token>.+)$", ActiveView.as_view(), name="active"),
     url(r"^login$", Login.as_view(), name="login"),
     url(r"^logout$", Logout.as_view(), name="logout"),
-    # url(r"^address$", Address.as_view(), name="address"),
+    url(r"^address$", Address.as_view(), name="address"),
+
+    # 装饰器原理 @login_required === >  login_required(Addresss.as_view())
     # url(r"^address$", login_required(Address.as_view()), name="address"),
-    url(r"^address$", login_required(Address.as_view()), name="address"),
-    # LoginoutView
 ]
+
+"""
+login_required([redirect_field_name=REDIRECT_FIELD_NAME, login_url=None])
+第一个参数是next = ？ next的名字 默认next
+第二个参数是登陆失败校验不通过情况下跳转的页面，
+第二个参数如果都不设置的话 可以仅仅设置settings.py 中 
+LOGIN_URL = '/users/login' 即可！
+"""
