@@ -111,13 +111,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
-# 配置静态文件加载路径
+#  ********** 配置静态文件加载路径****************************************************************************
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     # 这句话的意思是默认去找static文件夹下的[和项目同名的=>booktest文件夹非必须]
     os.path.join(BASE_DIR, 'static')
 ]
+#  ********** 配置静态文件加载路径 结束 ********************************************************************************
 CACHES = {
     "default": {
         "BACKEND": "redis_cache.cache.RedisCache",
@@ -131,16 +132,33 @@ CACHES = {
 # SESSION_ENGINE='django.contrib.sessions.backends.cache'
 # 3.可以将缓存和数据库同时使用：优先从本地缓存中获取，如果没有则从数据库中获取
 # SESSION_ENGINE='django.contrib.sessions.backends.cached_db'
-# 4.django-redis-sessions 存储到redis里
-SESSION_ENGINE = 'redis_sessions.session'
-SESSION_REDIS_HOST = 'localhost'
-SESSION_REDIS_PORT = 6379
-SESSION_REDIS_DB = 0
-SESSION_REDIS_PASSWORD = ''
-SESSION_REDIS_PREFIX = 'session'
+# 4.django-redis-sessions 存储到redis里 django-redis-sessions 配置 废弃！！！！！！！！！！
+# SESSION_ENGINE = 'redis_sessions.session'
+# SESSION_REDIS_HOST = 'localhost'
+# SESSION_REDIS_PORT = 6379
+# SESSION_REDIS_DB = 0
+# SESSION_REDIS_PASSWORD = ''
+# SESSION_REDIS_PREFIX = 'session'
+# ##########废弃！！！！！！！！！！！！！！！！！！！！废弃！！！！！！！！！！
+# 5 djnago-redis 的配置方式------------------------------------------------------------------------------------------
+# 缓存
+# Session
+# http://django-redis-chs.readthedocs.io/zh_CN/latest/#session-backend
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/5",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"  # 更换session引擎为缓存,默认存储在django_session表中
+SESSION_CACHE_ALIAS = "default"  # default
+# 5 djnago-redis 的配置方式 结束------------------------------------------------------------------------------------------------
 
-
-
+# 没有登陆情况下重定向的地址
+LOGIN_URL = '/users/login'
 
 # 原因：在settings.py中设置AUTH_USER_MODEL时，编码规则为'应用.用户模型类'
 #  AUTH_USER_MODEL = 'apps.users.User' 不符合规范 只能使用一个点,djang默认单应用
@@ -177,4 +195,4 @@ djcelery.setup_loader()
 # CELERY_IMPORTS = ('celery_tasks.tasks_rabbitmq')
 # # redis 配置
 BROKER_URL = 'redis://127.0.0.1:6379/7'
-CELERY_IMPORTS = ('celery_tasks.tasks_liuqi') # 'amqp://guest@localhost//'
+CELERY_IMPORTS = ('celery_tasks.tasks_liuqi')  # 'amqp://guest@localhost//'
