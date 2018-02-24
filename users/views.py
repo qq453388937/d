@@ -224,14 +224,15 @@ class MyLoginView(View):
         return login_required(view)
 
 
-# @login_required  # 错误!!!
+# @login_required  # 类上面加方法错误!!!
 class Address(MyLoginView):
-    # @login_required  # 错误!!!
+    # @login_required  # 方法上加装饰器错误!!!
     # @classmethod
     # def as_view(cls, **initkwargs):
     #     super(Address, )
 
     def get(self, request):
+        """提供收货地址页面，查询地址信息，提供修改功能渲染"""
         # 原始写法判断用户是否登陆 request.user.is_authenticated() 登陆返回True
         # if not request.user.is_authenticated():
         #     return redirect(reverse('users:login'))
