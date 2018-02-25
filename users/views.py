@@ -257,6 +257,8 @@ class AddressView(MyLoginBaseViewMixin, View):
 
         return render(request, 'user_center_site.html',context)
 
+
+
     def post(self, request):
         recv_name = request.POST.get('recv_name')
         addr = request.POST.get('addr')
