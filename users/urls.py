@@ -13,7 +13,8 @@ urlpatterns = [
     url(r"^active/(?P<token>.+)$", ActiveView.as_view(), name="active"),
     url(r"^login$", Login.as_view(), name="login"),
     url(r"^logout$", Logout.as_view(), name="logout"),
-    url(r"^address$", Address.as_view(), name="address"),
+    url(r"^address$", AddressView.as_view(), name="address"),
+    url(r"^userinfo$", UserInfoView.as_view(), name="userinfo"),
 
     # 装饰器原理 @login_required === >  login_required(Addresss.as_view())
     # url(r"^address$", login_required(Address.as_view()), name="address"),

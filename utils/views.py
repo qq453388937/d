@@ -24,7 +24,7 @@ class MyLoginBaseViewMixin(object):
         """
         # view = super(SpecialView, self).as_view(cls, **initkwargs)
         # view = super(MyLoginBaseView, cls).as_view(**initkwargs)
-
+        # super不一定是调用MyLoginBaseViewMixin的父类的as_view
         view = super(MyLoginBaseViewMixin, cls).as_view(**initkwargs)
         """
         因为调用的是Address.as_view(),所以这里的super().as_view(**initkwargs) ==> Address.super().as_view()

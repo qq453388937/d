@@ -18,14 +18,24 @@
     <div class="header">
         <div class="welcome fl">欢迎来到天天生鲜!</div>
         <div class="fr">
-            <div class="login_info fl">
-                欢迎您：<em>张 山</em>
-            </div>
-            <div class="login_btn fl">
-                <a href="login.html">登录</a>
-                <span>|</span>
-                <a href="register.html">注册</a>
-            </div>
+            <!-- django模板中request可以不写 -->
+            {% if user.is_authenticated %}<!-- django模板中调用函数不能带参数和小括号 -->
+                <!-- django模板中带参数后台写完传过来或者自定义过滤器解决 -->
+
+                <div class="login_btn fl">
+                    <a href="#">{{ user.username }}</a>
+                    <span>|</span>
+                    <a href="{% url 'users:logout' %}">退出</a>
+                </div>
+            {% else %}
+                <div class="login_btn fl">
+                    <a href="{% url 'users:login' %}">登录</a>
+                    <span>|</span>
+                    <a href="{% url 'users:register' %}">注册</a>
+                </div>
+            {% endif %}
+
+
             <div class="user_link fl">
                 <span>|</span>
                 <a href="user_center_info.html">用户中心</a>
@@ -53,20 +63,29 @@
         <ul>
             <li><a href="user_center_info.html">· 个人信息</a></li>
             <li><a href="user_center_order.html">· 全部订单</a></li>
-            <li><a href="user_center_site.html" class="active">· 收货地址</a></li>
+            <li><a href="{% url 'users:address' %}" class="active">· 收货地址</a></li>
         </ul>
     </div>
     <div class="right_content clearfix">
         <h3 class="common_title2">收货地址</h3>
         <div class="site_con">
+            {% if address %}
             <dl>
                 <dt>当前地址：</dt>
-                <dd>北京市 海淀区 东北旺西路8号中关村软件园 （李思 收） 182****7528</dd>
+                <dd>{{ address.detail_addr }} （{{ address.receiver_name }}） {{ address.receiver_mobile }}</dd>
             </dl>
+            {% else %}
+            <dl>
+                <dt>当前地址：</dt>
+                <dd>XX市 XX区 XX （XX 收） 151****1827  模板假数据</dd>
+            </dl>
+            {% endif %}
+
         </div>
         <h3 class="common_title2">编辑地址</h3>
         <div class="site_con">
-            <form>
+            <form method="post">
+                {% csrf_token %}
                 <div class="form_group">
                     <label>收件人：</label>
                     <input type="text" name="recv_name">

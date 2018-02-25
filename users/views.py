@@ -2,12 +2,12 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import *
 # 类视图需要
-from django.views.generic import View,TemplateView
+from django.views.generic import View, TemplateView
 # 反向解析
 from django.core.urlresolvers import reverse
 import re
 # 模型类
-from users.models import User
+from users.models import *  # User,Address
 # 异常===> 重名
 from django.db import IntegrityError
 # 配置文件的导入
@@ -25,7 +25,7 @@ from celery_tasks.tasks_liuqi import send_active_email
 # 导入登陆校验模块的装饰器
 from django.contrib.auth.decorators import login_required
 # 导入工具类模块的登陆校验类
-# from utils.views import MyLoginBaseViewMixin
+from utils.views import MyLoginBaseViewMixin  # 导入工具类模块的登陆校验类
 
 
 # Create your views here.
@@ -166,10 +166,10 @@ class Login(View):
         from django.contrib.auth import authenticate, login
         username = request.POST.get('username')
         password = request.POST.get('pwd')
-        if not all([username, password]):  # 一假为假
+        if not all([username, password]):  # 一假为假 not 拦截判断
             # return render(request, 'login.html', {'err_msg': '用户名密码不能为空'})
             return redirect(reverse('users:login'))
-        user = authenticate(username=username, password=password)  # django自带校验
+        user = authenticate(username=username, password=password)  # django自带校验用户名和密码，通过不为None
         is_ok = False
         if user is not None:
             if user.is_active:
@@ -177,28 +177,32 @@ class Login(View):
                 is_ok = True
                 # 记住用户名,免登录10 天, 反正保存到浏览器关闭 开始－－－－－－－－－－－
                 ret_remember = request.POST.get('remembered')
-                print(ret_remember)
+                print(ret_remember)  # 打印是否为on
                 http_response = HttpResponse()
                 http_response.content = "ok！登陆成功手动设置HttpResponse"
-                if ret_remember != "on":  # 保存到浏览器关闭,浏览会话结束时  checkbox: on | None
+                # 保存到浏览器关闭,浏览会话结束时  checkbox: on | None ---------------------------------
+                if ret_remember != "on":
                     request.session.set_expiry(0)
-                else:  # 保存10天 点击了记住 分之
+                else:  # 保存10天 点击了记住 if分支
                     http_response.set_cookie("user_name", username, max_age=60 * 60 * 24 * 1)
                     request.session.set_expiry(60 * 60 * 24 * 10)
-                # 记住用户名,免登录10 天, 反正保存到浏览器关闭 结束－－－－－－－－－－－
-
+                # ------------------------------------------------------------------------------------------
+                # 在这里也可以登陆成功以后判断页面的跳转，移动到if is_ok 的分支
             else:
                 return render(request, 'login.html', {'err_msg': '用户未激活,请查看邮件激活!'})
         else:
             return render(request, 'login.html', {'err_msg': '用户名或密码错误!'})
         if is_ok:
-            """
-        一键多值,session id 单个,和cookie中sessionid的值一致
-        fd2dac6bce19f55aeb4e267f0ccad4b22a94d338:{"_auth_user_id":"49","_auth_user_backend":"django.contrib.auth.backends.ModelBackend","pxd_name":"\u88f4\u6653\u4e1c666666","_auth_user_hash":"a28292554ea826aa5113a9cf4bd9810b5b4499b8"}
+            """一键多值,session id 单个,和cookie中sessionid的值一致
+            fd2dac6bce19f55aeb4e267f0ccad4b22a94d338:{"_auth_user_id":"49","_auth_user_backend":"django.contrib.auth.backends.ModelBackend","pxd_name":"\u88f4\u6653\u4e1c666666","_auth_user_hash":"a28292554ea826aa5113a9cf4bd9810b5b4499b8"}
             """
             # 测试存储一个session的值而已,可以存储一下已登陆的用户名信息方便展示使用
-            request.session['pxd_name'] = '裴晓东666666'
-            return http_response
+            request.session['pxd_name'] = 'MMD666666'
+            next = request.GET.get('next')
+            if next:  # next有值
+                return redirect(next)
+            else:  # 跳转到主页，主页待补全功能后跳转
+                return http_response
 
 
 class Logout(View):
@@ -212,16 +216,17 @@ class Logout(View):
         return redirect(reverse('users:login'))  # 退出登陆后进入登录页面
 
 
-from utils.views import MyLoginBaseViewMixin # 导入工具类模块的登陆校验类
 # @login_required  # 类上面加方法错误!!!
-class Address(MyLoginBaseViewMixin,View):
+from utils.views import MyLoginBaseViewMixin  # 导入工具类模块的登陆校验类
+
+
+class AddressView(MyLoginBaseViewMixin, View):
     # @login_required  # 方法上加装饰器错误!!!
     # @classmethod  错误!!!
     # def as_view(cls, **initkwargs):
     #     super(Address, )
-
     def get(self, request):
-        print(Address.__mro__)
+        print(Address.__mro__)  # c3 算法搜索方法顺序
         """提供收货地址页面，查询地址信息，提供修改功能渲染
         # 原始写法判断用户是否登陆 request.user.is_authenticated() 登陆返回True
         if not request.user.is_authenticated():
@@ -229,9 +234,55 @@ class Address(MyLoginBaseViewMixin,View):
         else
             return render(request,'user_center_site.html')
         """
+        # 获取登陆用户
+        login_user = request.user  # 登陆后request.user不为None，因为该视图继承MyLoginBaseViewMixin，经过登陆校验的
+        # add = Address.objects.filter(user=login_user).order_by('-create_time')[0]
+        # address_lastest_model0 = Address.objects.filter(user=login_user)[-1]
+        # address_lastest_model = Address.objects.filter(user=login_user).order_by('-create_time')[0]
+        # address_lastest_model2 = login_user.address_set.order_by('-create_time')[0]
+        try:
+            # 查询用户的地址信息，取最新最近创建的地址信息
+            address_lastest_model3 = login_use.address_set.lastest('create_time')  # 默认倒叙
+        except Exception as e:
+            address_lastest_model3 = None  # None模板判断使用
+        print(address_lastest_model3)
+        # 构造上下文
+        context = {
+            # 'user': login_user, # django已经封装给一个对象 user 在 request 中不用传递，并且前台直接可以user点出来
+            'address': address_lastest_model3,
+        }
+        # 渲染模板
+        # if request.user.is_authenticated()
+
         return render(request, 'user_center_site.html')
 
     def post(self, request):
-        pass
+        recv_name = request.POST.get('recv_name')
+        addr = request.POST.get('addr')
+        zip_code = request.POST.get('zip_code')
+        recv_mobile = request.POST.get('recv_mobile')
+        if  all([recv_name, addr, zip_code, recv_mobile]):
+            # 正则等校验略过 re模块
+            Address.objects.create(
+                recv_name=recv_name,
+                addr=addr,
+                zip_code=zip_code,
+                recv_mobile=recv_mobile,
+            )
+        return redirect(reverse('users:address'))
 
 
+class UserInfoView(MyLoginBaseViewMixin, View):
+    def get(self, request):
+        """查询个人信息和最近浏览信息"""
+        # 能进来get肯定是登陆的用户因为继承了MyLoginBaseViewMixin 已经做过了登陆session 校验
+        login_user = request.user
+        try:
+            user_lastest_address = Address.objects.filter(user=login_user).order_by('-create_time')[0]
+        except Address.DoesNotExist:
+            user_lastest_address = None
+
+        context = {
+            'user_lastest_address_model': user_lastest_address_model
+        }
+        return render(request, 'user_center_info.html', context)
