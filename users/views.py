@@ -242,7 +242,8 @@ class AddressView(MyLoginBaseViewMixin, View):
         # address_lastest_model2 = login_user.address_set.order_by('-create_time')[0]
         try:
             # 查询用户的地址信息，取最新最近创建的地址信息
-            address_lastest_model3 = login_use.address_set.lastest('create_time')  # 默认倒叙
+
+            address_lastest_model3 = login_user.address_set.latest('create_time')  # 默认倒叙
         except Exception as e:
             address_lastest_model3 = None  # None模板判断使用
         print(address_lastest_model3)
@@ -254,20 +255,22 @@ class AddressView(MyLoginBaseViewMixin, View):
         # 渲染模板
         # if request.user.is_authenticated()
 
-        return render(request, 'user_center_site.html')
+        return render(request, 'user_center_site.html',context)
 
     def post(self, request):
         recv_name = request.POST.get('recv_name')
         addr = request.POST.get('addr')
         zip_code = request.POST.get('zip_code')
         recv_mobile = request.POST.get('recv_mobile')
-        if  all([recv_name, addr, zip_code, recv_mobile]):
+        if all([recv_name, addr, zip_code, recv_mobile]):
             # 正则等校验略过 re模块
             Address.objects.create(
-                recv_name=recv_name,
-                addr=addr,
+                # user=request.user,
+                user_id=request.user.id,
+                receiver_name=recv_name,
+                detail_addr=addr,  # name和字段不一致
                 zip_code=zip_code,
-                recv_mobile=recv_mobile,
+                receiver_mobile=recv_mobile,
             )
         return redirect(reverse('users:address'))
 
