@@ -288,7 +288,7 @@ class UserInfoView(MyLoginBaseViewMixin, View):
             user_lastest_address = None
 
         context = {
-            'user_lastest_address_model': user_lastest_address_model
+            'user_lastest_address_model': user_lastest_address_model # dawdawdawdwadawdawdawdawd
         }
         return render(request, 'user_center_info.html', context) # wwoewdwadwadwadwadwa
 
