@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from .models import *
 # 类视图需要
 from django.views.generic import View, TemplateView
@@ -8,6 +8,7 @@ from django.core.urlresolvers import reverse
 import re
 # 模型类
 from users.models import *  # User,Address
+from goods.models import *  # GoodsSKU
 # 异常===> 重名
 from django.db import IntegrityError
 # 配置文件的导入
@@ -26,6 +27,8 @@ from celery_tasks.tasks_liuqi import send_active_email
 from django.contrib.auth.decorators import login_required
 # 导入工具类模块的登陆校验类
 from utils.views import MyLoginBaseViewMixin  # 导入工具类模块的登陆校验类
+# django redis 导入包
+from django_redis import get_redis_connection
 
 
 # Create your views here.
@@ -118,9 +121,9 @@ class RegisterView(View):
         # 正确写法 异步调用 异步发送激活邮件
         send_active_email.delay(email, user_name, token)
         print("发送邮件成功")
-        return HttpResponse("注册成功! 稍后查看邮件激活!")
+        # return HttpResponse("注册成功! 稍后查看邮件激活!")
 
-        # return redirect(reverse('users:login'))
+        return redirect(reverse('goods:index'))
 
 
 class ActiveView(View):
@@ -178,8 +181,7 @@ class Login(View):
                 # 记住用户名,免登录10 天, 反正保存到浏览器关闭 开始－－－－－－－－－－－
                 ret_remember = request.POST.get('remembered')
                 print(ret_remember)  # 打印是否为on
-                http_response = HttpResponse()
-                http_response.content = "ok！登陆成功手动设置HttpResponse"
+                http_response = HttpResponseRedirect(reverse('goods:index'))
                 # 保存到浏览器关闭,浏览会话结束时  checkbox: on | None ---------------------------------
                 if ret_remember != "on":
                     request.session.set_expiry(0)
@@ -236,13 +238,12 @@ class AddressView(MyLoginBaseViewMixin, View):
         """
         # 获取登陆用户
         login_user = request.user  # 登陆后request.user不为None，因为该视图继承MyLoginBaseViewMixin，经过登陆校验的
-        # add = Address.objects.filter(user=login_user).order_by('-create_time')[0]
-        # address_lastest_model0 = Address.objects.filter(user=login_user)[-1]
-        # address_lastest_model = Address.objects.filter(user=login_user).order_by('-create_time')[0]
-        # address_lastest_model2 = login_user.address_set.order_by('-create_time')[0]
+
         try:
             # 查询用户的地址信息，取最新最近创建的地址信息
-
+            # address_lastest_model0 = Address.objects.filter(user=login_user)[-1]
+            # address_lastest_model = Address.objects.filter(user=login_user).order_by('-create_time')[0]
+            # address_lastest_model2 = login_user.address_set.order_by('-create_time')[0]
             address_lastest_model3 = login_user.address_set.latest('create_time')  # 默认倒叙
         except Exception as e:
             address_lastest_model3 = None  # None模板判断使用
@@ -255,9 +256,7 @@ class AddressView(MyLoginBaseViewMixin, View):
         # 渲染模板
         # if request.user.is_authenticated()
 
-        return render(request, 'user_center_site.html',context)
-
-
+        return render(request, 'user_center_site.html', context)
 
     def post(self, request):
         recv_name = request.POST.get('recv_name')
@@ -281,14 +280,29 @@ class UserInfoView(MyLoginBaseViewMixin, View):
     def get(self, request):
         """查询个人信息和最近浏览信息"""
         # 能进来get肯定是登陆的用户因为继承了MyLoginBaseViewMixin 已经做过了登陆session 校验
+        # 1. 查询基本信息  用户名，联系方式，联系地址
         login_user = request.user
         try:
-            user_lastest_address = Address.objects.filter(user=login_user).order_by('-create_time')[0]
+            # user_lastest_address001 = Address.objects.filter(user=login_user)[-1]
+            # user_lastest_address002 = Address.objects.latest('create_time')
+            user_lastest_address003 = login_user.address_set.order_by('-create_time')[0]
+            # user_lastest_address = Address.objects.filter(user=login_user).order_by('-create_time')[0]
         except Address.DoesNotExist:
             user_lastest_address = None
-
+        # 2. 查询最近浏览记录
+        # from django_redis import get_redis_connection
+        redis_client = get_redis_connection('default')
+        key = 'history' + str(login_user.id)
+        sku_id_list = redis_client.lrange(key, 0, 4)
+        # Address.objects.filter()
+        sku_model_list = GoodsSKU.objects.filter(id__in=sku_id_list)
+        # sku_temp_list = []
+        # for x in sku_id_list:
+        #     sku_model = GoodsSKU.objects.get(id=x)
+        #     sku_temp_list.append(sku_model)
+        # 构造上下文
         context = {
-            'user_lastest_address_model': user_lastest_address_model # dawdawdawdwadawdawdawdawd
+            'user_lastest_address_model': user_lastest_address003,
+            'sku_model_list': sku_model_list,
         }
-        return render(request, 'user_center_info.html', context) # wwoewdwadwadwadwadwa
-
+        return render(request, 'user_center_info.html', context)

@@ -13,7 +13,7 @@
 <body>
 <div class="login_top clearfix">
     {#    <a href="../static/index.html" class="login_logo"><img src="../static/images/logo02.png"></a>#}
-    <a href="{% static 'index.html' %}" class="login_logo"><img src="{% static 'images/logo02.png' %}"></a>
+    <a href="{% url 'goods:index' %}" class="login_logo"><img src="{% static 'images/logo02.png' %}"></a>
 </div>
 <div style="color: red">123{{ err_msg }}</div>
 <div class="login_form_bg">
