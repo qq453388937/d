@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
+from django.conf.global_settings import DEFAULT_FILE_STORAGE
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # import sys
@@ -39,6 +41,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'tinymce',
     # 安装应用
     #  django 用户认证系统规定,安装的应用名称需要和 'AUTH_USER_MODEL = 'users.User'' 单应用
     'users',
@@ -195,6 +198,7 @@ EMAIL_FROM = '天天生鲜<15346566750@163.com>'  # 发件人抬头 天天生鲜
 
 
 import djcelery
+
 djcelery.setup_loader()
 # rabbit-mq 配置
 # BROKER_URL = 'amqp://guest@localhost//'
@@ -202,3 +206,19 @@ djcelery.setup_loader()
 # # redis 配置
 BROKER_URL = 'redis://127.0.0.1:6379/7'
 CELERY_IMPORTS = ('celery_tasks.tasks_liuqi')  # 'amqp://guest@localhost//'
+
+# 指定上传静态文件到fdfs 使用的存储类，FastDFSStorage自定义的 django提供的无法满足
+DEFAULT_FILE_STORAGE = 'utils.fastdfs.storage.FastDFSStorage'
+
+# 搭配自定义Storage使用的配置
+CLIENT_CONF = os.path.join(BASE_DIR, 'utils/fastdfs/client.conf')
+
+# 搭配Storage
+SERVER_IP = 'http://192.168.247.128:8888/'
+
+# 富文本样式配置
+TINYMCE_DEFAULT_CONFIG = {
+    'theme': 'advanced',  # 丰富样式
+    'width': 600,
+    'height': 400,
+}
