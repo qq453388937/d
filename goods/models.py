@@ -94,6 +94,7 @@ class IndexCategoryGoodsBanner(BaseModel):
     )
     category = models.ForeignKey(GoodsCategory, verbose_name="商品类别")
     sku = models.ForeignKey(GoodsSKU, verbose_name="商品SKU")
+    # {{ obj.get_level_display }}  {{ obj.get_level }}
     display_type = models.SmallIntegerField(choices=DISPLAY_TYPE_CHOICES, verbose_name="展示类型")
     index = models.SmallIntegerField(default=0, verbose_name="顺序")
 

@@ -207,8 +207,8 @@ djcelery.setup_loader()
 BROKER_URL = 'redis://127.0.0.1:6379/7'
 CELERY_IMPORTS = ('celery_tasks.tasks_liuqi')  # 'amqp://guest@localhost//'
 
-# 指定上传静态文件到fdfs 使用的存储类，FastDFSStorage自定义的 django提供的无法满足
-DEFAULT_FILE_STORAGE = 'utils.fastdfs.storage.FastDFSStorage'
+# 指定上传静态文件到fdfs 使用的存储类，FastDFSStorage自定义的存储类 django提供的无法满足
+DEFAULT_FILE_STORAGE = 'utils.fastdfs.storage.FastDFSStorage'  # Storage最后
 
 # 搭配自定义Storage使用的配置
 CLIENT_CONF = os.path.join(BASE_DIR, 'utils/fastdfs/client.conf')

@@ -24,9 +24,9 @@
         <div class="has_view_list">
             <ul class="goods_type_list clearfix">
                 {% for sku_model in sku_model_list %}
-                <li>
-                    <a href="#"><img src="{{ sku_model.default_image }}"></a>
-                    <h4><a href="#">{{ sku_model.name }}</a></h4>
+                <li>         <!-- 传的就是ＧｏｏｄｓＳｋｕ的ｉｄ刚好 -->
+                    <a href="{% url 'goods:detail' sku_model.id %}"><img src="{{ sku_model.default_image.url }}"></a>
+                    <h4><a href="{% url 'goods:detail' sku_model.id %}">{{ sku_model.name }}</a></h4>
                     <div class="operate">
                         <span class="prize">￥{{ sku_model.price }}</span>
                         <span class="unit">{{ sku_model.price }}/{{ sku_model.unit }}</span>

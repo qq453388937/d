@@ -29,6 +29,8 @@ from django.contrib.auth.decorators import login_required
 from utils.views import MyLoginBaseViewMixin  # 导入工具类模块的登陆校验类
 # django redis 导入包
 from django_redis import get_redis_connection
+# django 缓存工具包导入 cache
+from django.core.cache import cache
 
 
 # Create your views here.
@@ -284,25 +286,25 @@ class UserInfoView(MyLoginBaseViewMixin, View):
         login_user = request.user
         try:
             # user_lastest_address001 = Address.objects.filter(user=login_user)[-1]
-            # user_lastest_address002 = Address.objects.latest('create_time')
-            user_lastest_address003 = login_user.address_set.order_by('-create_time')[0]
+            user_lastest_address002 = Address.objects.latest('create_time')
+            # user_lastest_address003 = login_user.address_set.order_by('-create_time')[0]
             # user_lastest_address = Address.objects.filter(user=login_user).order_by('-create_time')[0]
         except Address.DoesNotExist:
             user_lastest_address = None
         # 2. 查询最近浏览记录
         # from django_redis import get_redis_connection
         redis_client = get_redis_connection('default')
-        key = 'history' + str(login_user.id)
+        key = 'history_' + str(login_user.id)
         sku_id_list = redis_client.lrange(key, 0, 4)
         # Address.objects.filter()
-        sku_model_list = GoodsSKU.objects.filter(id__in=sku_id_list)
-        # sku_temp_list = []
-        # for x in sku_id_list:
-        #     sku_model = GoodsSKU.objects.get(id=x)
-        #     sku_temp_list.append(sku_model)
+        # sku_model_list = GoodsSKU.objects.filter(id__in=sku_id_list)
+        sku_model_list = []
+        for x in sku_id_list:
+            sku_model = GoodsSKU.objects.get(id=x)
+            sku_model_list.append(sku_model)
         # 构造上下文
         context = {
-            'user_lastest_address_model': user_lastest_address003,
+            'user_lastest_address_model': user_lastest_address002,
             'sku_model_list': sku_model_list,
         }
         return render(request, 'user_center_info.html', context)

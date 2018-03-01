@@ -7,6 +7,7 @@ from .views import *
 
 urlpatterns = [
 
-    url(r'^$', IndexView.as_view(), name='index'),  # 神马都没有
+    url(r'^$|^index$', IndexView.as_view(), name='index'),  # 神马都没有
+    url(r'^detail/(?P<sku_id>\d+)$', DetailView.as_view(), name='detail'),  # DetailView /id 才能url让别人看到
 
 ]

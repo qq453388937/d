@@ -61,7 +61,7 @@ class FastDFSStorage(Storage):
         """文件存在返回True 反之返回False"""
         return False  # 告诉django文件不存在系统当中,文件都存到FastDFS里面去了 True 就不会调用_save()
 
-    # 上面都是存储，这里是下载
+    # 上面都是存储，这里的重写是辅助作用，辅助下载
     def url(self, name):
         """可以返回要下载的文件的全路径,提供给用户下载时使用.
            name 就是要下载的文件的名字, 将来会用数据库中的file_id传到url，
