@@ -230,6 +230,7 @@ class ListView(View):
         # 构造上下文
         context = {
             'category': category,
+
             'categorys': categorys,
             'new_skus': new_skus,
             # 'skus':skus, # 只传分页的skus 不传所有的skus
