@@ -10,6 +10,9 @@ from goods.models import *
 # django 缓存工具包导入 cache
 from django.core.cache import cache
 
+# 分页需要导包
+from django.core.paginator import *
+
 
 # 主页无需登陆即可访问添加购物车
 
@@ -61,8 +64,8 @@ class IndexView(View):
             # hgetall() 读取购物车数据 hset key field value    key带上用户id用于主键区分每个用户的购物车
             # 每个用户都有自己的哈希对象，每个用户自己特有的购物车
             # %s 占位后面可以直接填数字
-            # cart_dict = redis_client.hgetall('cart_%s' % request.user.id)  # 获取所有字段:value键值对组合
-            cart_dict = redis_client.hgetall('cart_%s' % 666)  # 获取所有字段:value键值对组合
+            cart_dict = redis_client.hgetall('cart_%s' % request.user.id)  # 获取所有字段:value键值对组合
+            # cart_dict = redis_client.hgetall('cart_%s' % 666)  # 获取所有字段:value键值对组合
             cart_num = 0
             for val in cart_dict.values():  # 遍历值
                 # print(type(val))
@@ -137,7 +140,7 @@ class DetailView(View):
             'other_skus': other_skus,
         }
         # 查询购物车信息 redis
-        if request.user.is_authenticated():
+        if request.user.is_authenticated():  # 购物车最全注释
             """需求是：用户登陆了才会计算购物车信息
             这么写方便上面缓存，如果不需要缓存，一次构造完上下文即可
             """
@@ -160,9 +163,10 @@ class DetailView(View):
             # context.update({'cart_num': 777777777})
             # context.update(cart_num=777777777)
 
-        # 记录最近浏览信息(redis)
+        # 记录最近浏览信息(redis) 添加前先去重
         redis_client.lrem('history_%s' % request.user.id, 0,
                           sku_id)  # count=0 删除所有value 是sku_id值的,count>0 从左往右删除count个,count<0从右往左删除count个
+        # 添加
         redis_client.lpush('history_%s' % request.user.id, sku_id)
         # 最多保存５个
         redis_client.ltrim('history_%s', 0, 4)
@@ -172,3 +176,68 @@ class DetailView(View):
 
     def post(self, request):
         pass
+
+
+class ListView(View):
+    def get(self, request, category_id, page_num):
+        """渲染模板,查询分页,排序"""
+        # 查询用户要看的商品分类,category_id 对应的
+        # /list/category_id/page_num?sort=default
+        try:
+            category = GoodsCategory.objects.get(id=category_id)  # url传参可能非法输入
+        except GoodsCategory.DoesNotExist:
+            return redirect(reverse('goods:index'))
+        # 查询所有商品分类
+        categorys = GoodsCategory.objects.all()  # 6条 6大分类
+        # 查询新品推荐 2个
+        new_skus = GoodsSKU.objects.filter(category=category).order_by('-create_time')[:2]
+
+        # 查询category_id 对应的所有分类sku信息，根据URL GET传递过来的参数
+        sort = request.GET.get('sort', 'default')
+        # 根据排序来查询过滤skus 信息
+        if sort == 'price':
+            skus = GoodsSKU.objects.filter(category=category).order_by('price')  # 价格正序
+        elif sort == 'hot':
+            skus = GoodsSKU.objects.filter(category=category).order_by('-sales')  # 销量倒叙
+        else:  # list/1/1?sort=dwadwa 非法操作或者  # 不传|第一次请求
+            skus = GoodsSKU.objects.filter(category=category)
+            # 用户非法输入，重置sort 校正传给模板（前端URL参数重置使用），后端已经default
+            sort = 'default'
+        # 构造上下文
+        context = {}
+        # 查询购物车信息 redis
+        if request.user.is_authenticated():
+            redis_client = get_redis_connection('default')  # alt+enter 自动导入
+            # hgetall => Return a Python dict of the hash’s name/value pairs
+            cart_dict = redis_client.hgetall('cart_%s' % request.user.id)  # ('cart_%s' % 666 获取所有字段:value键值对组合
+            cart_num = 0
+            for val in cart_dict.values():  # 遍历值
+                cart_num += int(val)  # 计算购物车的商品总数量 byte类型，只有数字和字母可以直接转int，如果是汉子必须decode()一下先
+            # context.update({'cart_num': 77}|cart_num=77|dict(cart_num=77))
+            context['cart_num'] = cart_num
+        # 分页
+        paginator = Paginator(skus, 2)  # 每页2条 ,惰性加载，懒加载，只有模板用到该数据的时候查询数据库
+        page_num = int(page_num) # url 传参过来的是字符串
+        try:
+            # 获取用户要看的那一页
+            page_skus = paginator.page(
+                page_num)  # paginator.page(1) Returns a Page object for the given 1-based page number.
+        except EmptyPage as e:
+            page_skus = paginator.page(1)
+        # 获取页码列表
+        page_list = paginator.page_range
+
+        # 构造上下文
+        context = {
+            'category': category,
+            'categorys': categorys,
+            'new_skus': new_skus,
+            # 'skus':skus, # 只传分页的skus 不传所有的skus
+            'page_skus': page_skus,  # 传分页的skus
+            'page_list': page_list,
+            'sort': sort,  # 前端URL参数重置使用(非法操作),前台分页使用=> 分页保证排序
+
+        }
+
+        # 渲染模板
+        return render(request, 'list.html', context)

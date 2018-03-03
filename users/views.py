@@ -308,3 +308,6 @@ class UserInfoView(MyLoginBaseViewMixin, View):
             'sku_model_list': sku_model_list,
         }
         return render(request, 'user_center_info.html', context)
+
+
+
