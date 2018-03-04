@@ -225,15 +225,16 @@ class Login(View):
                     # if count > goods_model.stock:
                     #     pass # 具体如何处理看需求只要影響正常登陆即可
 
-
                 # redis_con.hset('cart_%s' % request.user.id, sku_id_encode, count)
                 # 合并数据更新到redis字典
                 cart_dict_redis[sku_id_encode] = count
             #  special 给一个字典自动hmset  django_redis 封装 key1,val1,key2,val2 传递进去一个字典自动转换为hmset命令，一次赋值多个
-            if cart_dict_redis: # 不能为空，空就异常了，一次新增多条记录给hash
+            if cart_dict_redis:  # 不能为空，空就异常了，一次新增多条记录给hash
                 redis_con.hmset('cart_%s' % request.user.id, cart_dict_redis)
             if next:  # next有值
-                http_response.url=next
+                if next == '/order/place':
+                    next = '/cart/info'
+                http_response = HttpResponseRedirect(next)
             http_response.delete_cookie('cart')  # 清空购物车cookie
             return http_response
             # render也可以创建response对象！

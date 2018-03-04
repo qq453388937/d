@@ -27,10 +27,11 @@
         <li class="col05">小计</li>
         <li class="col06">操作</li>
     </ul>
-    <form method="post" action="#">
+    <form method="post" action="{% url 'order:place' %}">
         {% csrf_token %}
         {% for sku in skus %}
             <ul class="cart_list_td clearfix" sku_id="{{ sku.id }}">
+                                        <!-- 将sku_id 埋到checkbox 的value 里面,可以一键多值 -->
                 <li class="col01"><input type="checkbox" name="sku_ids" value="{{ sku.id }}" checked></li>
                 <li class="col02"><img src="{{ sku.default_image.url }}"></li>
                 <li class="col03">{{ sku.name }}<br><em>{{ sku.price }}/{{ sku.unit }}</em></li>
@@ -63,12 +64,7 @@
 {% block bottom_files %}
     <script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
     <script type="text/javascript">
-        $(function () {
-            $('#commit_btn').hide();
-            $('qujiesuan').click(function () {
-                $('#commit_btn').click();
-            });
-        });
+
 
         // 更新页面合计信息
         function freshOrderCommitInfo() {
