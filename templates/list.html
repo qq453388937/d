@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    天天生鲜-商品列表
+{% endblock title %}
+{% block body %}
+
+    <div class="navbar_con">
+        <div class="navbar clearfix">
+            <div class="subnav_con fl">
+                <h1>全部商品分类</h1>
+                <span></span>
+                <ul class="subnav">
+                    {% for category in categorys %}
+                        <!-- 点分类的名字跳到分类列表 传分类id 和 第几页 默认跳第一页 -->
+                        <li><a href="{% url 'goods:list' category.id 1 %}?sort=default"
+                               class="{{ category.logo }}">{{ category.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <ul class="navlist fl">
+                <li><a href="">首页</a></li>
+                <li class="interval">|</li>
+                <li><a href="">手机生鲜</a></li>
+                <li class="interval">|</li>
+                <li><a href="">抽奖</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="breadcrumb">
+        <!-- 全部分类进入首页 /  or /index -->
+        <a href="{% url 'goods:index' %}">全部分类</a>
+        <span>></span>
+        <!-- 当前分类点自己不跳转 -->
+        <a href="#">{{ category.name }}</a>
+    </div>
+
+    <div class="main_wrap clearfix">
+        <div class="l_wrap fl clearfix">
+            <div class="new_goods">
+                <h3>新品推荐</h3>
+                <ul>
+                    {% for new_sku in new_skus %}
+                        <li>
+                            <!-- sku涉及到的跳转到商品详情页 传 => sku id 过去获取详情页  -->
+                            <a href="{% url 'goods:detail' new_sku.id %}"><img
+                                    src="{{ new_sku.default_image.url }}"></a>
+                            <h4><a href="{% url 'goods:detail' new_sku.id %}">{{ new_sku.name }}</a></h4>
+                            <div class="prize">￥{{ new_sku.price }}</div>
+                        </li>
+                    {% endfor %}
+
+
+                </ul>
+            </div>
+        </div>
+
+        <div class="r_wrap fr clearfix">
+            <div class="sort_bar">
+                {#        category.id 后台传过来的（最前面点进来分类的时候传进来的分类再传回来）, 分类id       #}
+                <a href="{% url 'goods:list' category.id 1 %}?sort=default"
+                   {% if sort == 'default' %}class="active"{% endif %}>默认</a>
+                <a href="{% url 'goods:list' category.id 1 %}?sort=price"
+                        {#       高亮是class="active" 后台sort来控制的，后台sort是前台用户点过来的url里面，点击排序之后传到后台非法操作等安全处理后在模板中判断sort            #}
+                   {% if sort == 'price' %}class="active"{% endif %}>价格</a>
+                <a href="{% url 'goods:list' category.id 1 %}?sort=hot" {% if sort == 'hot' %}class="active"{% endif %}>人气</a>
+            </div>
+
+            <ul class="goods_type_list clearfix">
+                {% for page_sku in page_skus %}
+
+                    <li>
+                        <!-- sku涉及到的跳转到商品详情页 传 => sku id 过去获取详情页  -->
+                        <a href="{% url 'goods:detail' page_sku.id %}"><img src="{{ page_sku.default_image.url }}"></a>
+                        <h4><a href="{% url 'goods:detail' page_sku.id %}">{{ page_sku.name }}</a></h4>
+                        <div class="operate">
+                            <span class="prize">￥{{ page_sku.price }}</span>
+                            <span class="unit">{{ page_sku.price }}/{{ page_sku.unit }}</span>
+                            <!-- 购物车模块 -->
+                            <a href="#" class="add_goods" title="加入购物车"></a>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div class="pagenation">
+
+                {% if  page_skus.has_previous %}
+                    {#          过滤器的方式   这里index访问不到 page_skus.number替代     #}
+                    <a href="{% url 'goods:list' category.id page_skus.number|add:-1 %}?sort={{ sort }}">
+                        上一页
+                    </a>
+                {% endif %}
+
+                {% for index in page_list %}
+                                            <!-- 分页是第几页循环到几，排序不随页数改变一直往后传递 -->
+                    <a href="{% url 'goods:list' category.id index %}?sort={{ sort }}"
+                       {% if page_skus.number == index %}class="active"{% endif %}>{{ index }}</a>
+                {% endfor %}
+
+                {% if  page_skus.has_next %}
+                    {#          直接调用现成的方法 page.next_page_number | previos_page_number        #}
+                    <a href="{% url 'goods:list' category.id page_skus.next_page_number %}?sort={{ sort }}">
+                        下一页
+                    </a>
+                {% endif %}
+
+                <a href="#">></a>
+            </div>
+        </div>
+    </div>
+{% endblock body %}

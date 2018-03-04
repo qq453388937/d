@@ -217,7 +217,8 @@ class Logout(View):
         """
         from django.contrib.auth import authenticate, login, logout
         logout(request)
-        return redirect(reverse('users:login'))  # 退出登陆后进入登录页面
+        # return redirect(reverse('users:login'))  # 退出登陆后进入登录页面
+        return redirect(reverse('goods:index'))  # 退出登陆后进入首页
 
 
 # @login_required  # 类上面加方法错误!!!

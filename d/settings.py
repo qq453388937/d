@@ -41,7 +41,10 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 富文本编辑器
     'tinymce',
+    # haystack 搜索引擎需要
+    'haystack',
     # 安装应用
     #  django 用户认证系统规定,安装的应用名称需要和 'AUTH_USER_MODEL = 'users.User'' 单应用
     'users',
@@ -222,3 +225,20 @@ TINYMCE_DEFAULT_CONFIG = {
     'width': 600,
     'height': 400,
 }
+
+
+# 配置搜索引擎后端
+HAYSTACK_CONNECTIONS = {
+  'default': {
+      # 使用whoosh引擎：提示，如果不需要使用jieba框架实现分词，就使用whoosh_backend
+      # 切换完结巴分词配置后一定要重新 python manage.py rebuild_index
+      'ENGINE': 'haystack.backends.whoosh_cn_backend.WhooshEngine',
+      # 索引文件路径 python manager.py rebuild_index,新华字典，索引 => whoosh_index 文件夹
+      'PATH': os.path.join(BASE_DIR, 'whoosh_index'),
+  }
+}
+# 当添加、修改、删除数据时，自动生成索引
+HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
+# 每页多少个也可以配, zj 版本特有 ,配置该项目后可以用paginator 直接就返回分页后的对象
+#  paginator.page(１) 可以点出对象
+HAYSTACK_SEARCH_RESULTS_PER_PAGE = 2

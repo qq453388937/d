@@ -20,6 +20,8 @@ import tinymce.urls
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^tinymce/', include('tinymce.urls')),
+    url(r'^search/', include('haystack.urls')),  # haystack 路由/search/?q=草莓
     url(r'^users/', include('users.urls', namespace='users')),
+    url(r'^cart/', include('cart.urls', namespace='cart')),  # 购物车
     url(r'^', include('goods.urls', namespace='goods')),
 ]

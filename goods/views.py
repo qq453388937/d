@@ -163,13 +163,13 @@ class DetailView(View):
             # context.update({'cart_num': 777777777})
             # context.update(cart_num=777777777)
 
-        # 记录最近浏览信息(redis) 添加前先去重
-        redis_client.lrem('history_%s' % request.user.id, 0,
-                          sku_id)  # count=0 删除所有value 是sku_id值的,count>0 从左往右删除count个,count<0从右往左删除count个
-        # 添加
-        redis_client.lpush('history_%s' % request.user.id, sku_id)
-        # 最多保存５个
-        redis_client.ltrim('history_%s', 0, 4)
+            # 记录最近浏览信息(redis) 添加前先去重
+            redis_client.lrem('history_%s' % request.user.id, 0,
+                              sku_id)  # count=0 删除所有value 是sku_id值的,count>0 从左往右删除count个,count<0从右往左删除count个
+            # 添加
+            redis_client.lpush('history_%s' % request.user.id, sku_id)
+            # 最多保存５个
+            redis_client.ltrim('history_%s', 0, 4)
 
         # 渲染模板
         return render(request, 'detail.html', context)
@@ -242,3 +242,8 @@ class ListView(View):
 
         # 渲染模板
         return render(request, 'list.html', context)
+
+
+class MySearchView(View):
+    def get(self,request):
+        return render(request,'mysearch.html')

@@ -1,0 +1,3 @@
+# 检索模型类的哪些字段
+{{ object.name }}
+{{ object.title }}

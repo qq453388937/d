@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+{% if query %}
+    {#  HayStack 给我们3个后端变量 query,page 页对象,paginator 分页器对象   #}
+    <!-- paginator 对象配置HAYSTACK_SEARCH_RESULTS_PER_PAGE = 1 后可以用这个 -->
+    <h3>搜索结果如下：</h3>
+    {#  page.object_list => 返回当前页对象的列表  #}
+    {% for result in page.object_list %}
+    {#  result.object 是模型类对应goodssku_text.txt 里的object      #}
+        <a href="/{{ result.object.id }}/">{{ result.object.name }}</a><br/>
+        <a href="/{{ result.object.id }}/">{{ result.object.title }}</a><br/>
+    {% empty %}
+        <p>啥也没找到</p>
+    {% endfor %}
+
+    {% if page.has_previous or page.has_next %}
+        <div>
+            {% if page.has_previous %}<a href="?q={{ query }}&amp;page={{ page.previous_page_number }}">{% endif %}&laquo; 上一页{% if page.has_previous %}</a>{% endif %}
+        |
+            {% if page.has_next %}<a href="?q={{ query }}&amp;page={{ page.next_page_number }}">{% endif %}下一页 &raquo;{% if page.has_next %}</a>{% endif %}
+        </div>
+    {% endif %}
+{% endif %}
+</body>
+</html>
