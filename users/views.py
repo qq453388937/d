@@ -31,6 +31,7 @@ from utils.views import MyLoginBaseViewMixin  # 导入工具类模块的登陆�
 from django_redis import get_redis_connection
 # django 缓存工具包导入 cache
 from django.core.cache import cache
+import json
 
 
 # Create your views here.
@@ -203,10 +204,39 @@ class Login(View):
             # 测试存储一个session的值而已,可以存储一下已登陆的用户名信息方便展示使用
             request.session['pxd_name'] = 'MMD666666'
             next = request.GET.get('next')
+            # 登陆成功后跳转之前将cookie中的购物车信息合并导redis
+            cookies_str = request.COOKIES.get('cart')
+            if cookies_str:
+                cart_dict_cookie = json.loads(cookies_str)
+            else:
+                cart_dict_cookie = {}
+            # 要去查询redis中的购物车信息方便合并
+            redis_con = get_redis_connection('default')
+            cart_dict_redis = redis_con.hgetall('cart_%s' % request.user.id)
+            # 因为要合并cookie到redis 所以要遍历cookie的数据判断是否in redis的字典从而累加合并，不存在直接合并
+            for sku_id, count in cart_dict_cookie.items():
+                sku_id_encode = sku_id.encode()  # b'1'
+                # redis 中取的字典key和value都是bytes类型的
+                if sku_id_encode in cart_dict_redis:  # 在计算和比较时一定要类型统一
+                    origin_count = cart_dict_redis[sku_id_encode]  # redis的键是bytes类型的
+                    count += int(origin_count.decode())  # 加到cookie里去了==> 好操作
+                    # 这里合并可能库存不足
+                    # goods_model =  GoodsSKU.objects.get(id=sku_id)
+                    # if count > goods_model.stock:
+                    #     pass # 具体如何处理看需求只要影響正常登陆即可
+
+
+                # redis_con.hset('cart_%s' % request.user.id, sku_id_encode, count)
+                # 合并数据更新到redis字典
+                cart_dict_redis[sku_id_encode] = count
+            #  special 给一个字典自动hmset  django_redis 封装 key1,val1,key2,val2 传递进去一个字典自动转换为hmset命令，一次赋值多个
+            if cart_dict_redis: # 不能为空，空就异常了，一次新增多条记录给hash
+                redis_con.hmset('cart_%s' % request.user.id, cart_dict_redis)
             if next:  # next有值
-                return redirect(next)
-            else:  # 跳转到主页，主页待补全功能后跳转
-                return http_response
+                http_response.url=next
+            http_response.delete_cookie('cart')  # 清空购物车cookie
+            return http_response
+            # render也可以创建response对象！
 
 
 class Logout(View):
@@ -309,6 +339,3 @@ class UserInfoView(MyLoginBaseViewMixin, View):
             'sku_model_list': sku_model_list,
         }
         return render(request, 'user_center_info.html', context)
-
-
-

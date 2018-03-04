@@ -13,11 +13,51 @@ from django.core.cache import cache
 # 分页需要导包
 from django.core.paginator import *
 
+import json
+
 
 # 主页无需登陆即可访问添加购物车
 
 
-class IndexView(View):
+class BaseCartView(View):
+    """查询未登陆和登陆时购物车的数据"""
+
+    def get_cart_num(self, request):
+        cart_num = 0
+        if request.user.is_authenticated():
+            """需求是：用户登陆了才会计算购物车信息"""
+            # 创建redis
+            redis_client = get_redis_connection('default')  # alt+enter 自动导入
+            # hgetall() 读取购物车数据 hset key field value    key带上用户id用于主键区分每个用户的购物车
+            # 每个用户都有自己的哈希对象，每个用户自己特有的购物车
+            # %s 占位后面可以直接填数字
+            cart_dict = redis_client.hgetall('cart_%s' % request.user.id)  # 获取所有字段:value键值对组合
+            # cart_dict = redis_client.hgetall('cart_%s' % 666)  # 获取所有字段:value键值对组合
+            cart_num = 0
+            for val in cart_dict.values():  # 遍历值
+                # print(type(val))
+                # print(val)  # b'3'
+                # print(int(val))  # 3
+                # print(type(int(val)))  # <class 'int'>
+                cart_num += int(val)  # 计算购物车的商品总数量 byte类型，只有数字和字母可以直接转int，如果是汉子必须decode()一下先
+            # cart_num = 777777777  # 测试假数据,假设查出来了
+            # context['cart_num'] = cart_num # 放到外面去
+            # context.update({'cart_num': 777777777})
+            # context.update(cart_num=777777777)
+        else:
+            cookie_str = request.COOKIES.get('cart')
+            if cookie_str:
+                cart_dict = json.loads(cookie_str)
+            else:
+                cart_dict = {}
+            # 遍历cart_dict 求和
+            for value in cart_dict.values():
+                cart_num += value  # int 类型不用转换 表里如一  + int可以做优化
+
+        return cart_num
+
+
+class IndexView(BaseCartView):
 
     def get(self, request):
         """查询主页商品数据"""
@@ -57,26 +97,9 @@ class IndexView(View):
         # 查询购物车信息(购物车和缓存毛线关系都没有) ,购物车的信息不能放在缓存当中,要单独查询构造到原来已有的上下文中
         cart_num = 88  # 原先假数据,测试数据
         context.update(cart_num=cart_num)  # 传入一个字典变量解包,或者{},或者命名参数
-        if request.user.is_authenticated():
-            """需求是：用户登陆了才会计算购物车信息"""
-            # 创建redis
-            redis_client = get_redis_connection('default')  # alt+enter 自动导入
-            # hgetall() 读取购物车数据 hset key field value    key带上用户id用于主键区分每个用户的购物车
-            # 每个用户都有自己的哈希对象，每个用户自己特有的购物车
-            # %s 占位后面可以直接填数字
-            cart_dict = redis_client.hgetall('cart_%s' % request.user.id)  # 获取所有字段:value键值对组合
-            # cart_dict = redis_client.hgetall('cart_%s' % 666)  # 获取所有字段:value键值对组合
-            cart_num = 0
-            for val in cart_dict.values():  # 遍历值
-                # print(type(val))
-                # print(val)  # b'3'
-                # print(int(val))  # 3
-                # print(type(int(val)))  # <class 'int'>
-                cart_num += int(val)  # 计算购物车的商品总数量 byte类型，只有数字和字母可以直接转int，如果是汉子必须decode()一下先
-            # cart_num = 777777777  # 测试假数据,假设查出来了
-            context['cart_num'] = cart_num
-            # context.update({'cart_num': 777777777})
-            # context.update(cart_num=777777777)
+        # 获得购物车数量
+        cart_num = self.get_cart_num(request)  # 封装到方法里去了
+        context['cart_num'] = cart_num
 
         # 渲染模板
         return render(request, 'index.html', context)
@@ -85,7 +108,7 @@ class IndexView(View):
         pass
 
 
-class DetailView(View):
+class DetailView(BaseCartView):
     """商品详情页，不需要用户登陆也可以访问
         # 测试redis是否存取一个类型
         # g = Goods()
@@ -139,6 +162,8 @@ class DetailView(View):
             'others_skus_my': others_skus_my,
             'other_skus': other_skus,
         }
+        cart_num = self.get_cart_num(request)
+        context['cart_num'] = cart_num
         # 查询购物车信息 redis
         if request.user.is_authenticated():  # 购物车最全注释
             """需求是：用户登陆了才会计算购物车信息
@@ -150,16 +175,16 @@ class DetailView(View):
             # 每个用户都有自己的哈希对象，每个用户自己特有的购物车
             # %s 占位后面可以直接填数字
             # cart_dict = redis_client.hgetall('cart_%s' % request.user.id)  # 获取所有字段:value键值对组合
-            cart_dict = redis_client.hgetall('cart_%s' % 666)  # 获取所有字段:value键值对组合
-            cart_num = 0
-            for val in cart_dict.values():  # 遍历值
-                # print(type(val))
-                # print(val)  # b'3'
-                # print(int(val))  # 3
-                # print(type(int(val)))  # <class 'int'>
-                cart_num += int(val)  # 计算购物车的商品总数量 byte类型，只有数字和字母可以直接转int，如果是汉子必须decode()一下先
+            # cart_dict = redis_client.hgetall('cart_%s' % 666)  # 获取所有字段:value键值对组合
+            # cart_num = 0
+            # for val in cart_dict.values():  # 遍历值
+            # print(type(val))
+            # print(val)  # b'3'
+            # print(int(val))  # 3
+            # print(type(int(val)))  # <class 'int'>
+            # cart_num += int(val)  # 计算购物车的商品总数量 byte类型，只有数字和字母可以直接转int，如果是汉子必须decode()一下先
             # cart_num = 777777777  # 测试假数据,假设查出来了
-            context['cart_num'] = cart_num
+            # context['cart_num'] = cart_num
             # context.update({'cart_num': 777777777})
             # context.update(cart_num=777777777)
 
@@ -178,7 +203,7 @@ class DetailView(View):
         pass
 
 
-class ListView(View):
+class ListView(BaseCartView):
     def get(self, request, category_id, page_num):
         """渲染模板,查询分页,排序"""
         # 查询用户要看的商品分类,category_id 对应的
@@ -206,18 +231,19 @@ class ListView(View):
         # 构造上下文
         context = {}
         # 查询购物车信息 redis
-        if request.user.is_authenticated():
-            redis_client = get_redis_connection('default')  # alt+enter 自动导入
-            # hgetall => Return a Python dict of the hash’s name/value pairs
-            cart_dict = redis_client.hgetall('cart_%s' % request.user.id)  # ('cart_%s' % 666 获取所有字段:value键值对组合
-            cart_num = 0
-            for val in cart_dict.values():  # 遍历值
-                cart_num += int(val)  # 计算购物车的商品总数量 byte类型，只有数字和字母可以直接转int，如果是汉子必须decode()一下先
-            # context.update({'cart_num': 77}|cart_num=77|dict(cart_num=77))
-            context['cart_num'] = cart_num
+        cart_num = self.get_cart_num(request) # 直接放到上下文中ok
+        # if request.user.is_authenticated():
+        #     redis_client = get_redis_connection('default')  # alt+enter 自动导入
+        #     # hgetall => Return a Python dict of the hash’s name/value pairs
+        #     cart_dict = redis_client.hgetall('cart_%s' % request.user.id)  # ('cart_%s' % 666 获取所有字段:value键值对组合
+        #     cart_num = 0
+        #     for val in cart_dict.values():  # 遍历值
+        #         cart_num += int(val)  # 计算购物车的商品总数量 byte类型，只有数字和字母可以直接转int，如果是汉子必须decode()一下先
+        #     # context.update({'cart_num': 77}|cart_num=77|dict(cart_num=77))
+        #     context['cart_num'] = cart_num
         # 分页
         paginator = Paginator(skus, 2)  # 每页2条 ,惰性加载，懒加载，只有模板用到该数据的时候查询数据库
-        page_num = int(page_num) # url 传参过来的是字符串
+        page_num = int(page_num)  # url 传参过来的是字符串
         try:
             # 获取用户要看的那一页
             page_skus = paginator.page(
@@ -230,14 +256,13 @@ class ListView(View):
         # 构造上下文
         context = {
             'category': category,
-
             'categorys': categorys,
             'new_skus': new_skus,
             # 'skus':skus, # 只传分页的skus 不传所有的skus
             'page_skus': page_skus,  # 传分页的skus
             'page_list': page_list,
             'sort': sort,  # 前端URL参数重置使用(非法操作),前台分页使用=> 分页保证排序
-
+            'cart_num': cart_num,
         }
 
         # 渲染模板
@@ -245,5 +270,5 @@ class ListView(View):
 
 
 class MySearchView(View):
-    def get(self,request):
-        return render(request,'mysearch.html')
+    def get(self, request):
+        return render(request, 'mysearch.html')
