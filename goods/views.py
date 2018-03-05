@@ -39,7 +39,7 @@ class BaseCartView(View):
                 # print(val)  # b'3'
                 # print(int(val))  # 3
                 # print(type(int(val)))  # <class 'int'>
-                cart_num += int(val)  # 计算购物车的商品总数量 byte类型，只有数字和字母可以直接转int，如果是汉子必须decode()一下先
+                cart_num += int(val)  # 计算购物车的商品总数量 byte类型，只有字符串可以直接转int，如果是汉子必须decode()一下先
             # cart_num = 777777777  # 测试假数据,假设查出来了
             # context['cart_num'] = cart_num # 放到外面去
             # context.update({'cart_num': 777777777})
@@ -52,7 +52,7 @@ class BaseCartView(View):
                 cart_dict = {}
             # 遍历cart_dict 求和
             for value in cart_dict.values():
-                cart_num += value  # int 类型不用转换 表里如一  + int可以做优化
+                cart_num += value  # int 类型不用转换 表里如一  + int可以做优化提取到if 外面
 
         return cart_num
 

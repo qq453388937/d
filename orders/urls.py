@@ -8,5 +8,7 @@ from .views import *
 urlpatterns = [
     # /orders/place
     url(r'^place$', PlaceOrderView.as_view(), name='place'),
+    # /orders/commit POST
+    url(r'^commit$', CommitOrderView.as_view(), name='commit'),
 
 ]

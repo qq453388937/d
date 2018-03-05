@@ -108,12 +108,12 @@
             }
             else {
                 var order_data = {
-                    address_id: address_id,
-                    pay_method: $('input[name="pay_style"]:checked').val(),
-                    sku_ids: "{{ sku_ids }}",
+                    address_id: address_id,// 收集address id
+                    pay_method: $('input[name="pay_style"]:checked').val(),//支付方式
+                    sku_ids: "{{ sku_ids }}",//确认订单页面贯穿过来
                     csrfmiddlewaretoken: "{{ csrf_token }}"
                 };
-                $.post('#', order_data, function (data) {
+                $.post('{% url 'order:commit' %}', order_data, function (data) {
                     if (1 == data.code) {
                         location.href = '/users/login';
                     } else if (6 == data.code) {
@@ -127,7 +127,7 @@
                             }, 3000)
                         });
                     } else {
-                        alert("下单失败，请重试！");
+                        alert("下单失败，请重试！" + data.message);
                     }
                 });
             }

@@ -204,7 +204,7 @@ class Login(View):
             # 测试存储一个session的值而已,可以存储一下已登陆的用户名信息方便展示使用
             request.session['pxd_name'] = 'MMD666666'
             next = request.GET.get('next')
-            # 登陆成功后跳转之前将cookie中的购物车信息合并导redis
+            # 登陆成功后跳转之前将cookie中的购物车信息合并导redis,首先读取cookie中所有的购物车信息
             cookies_str = request.COOKIES.get('cart')
             if cookies_str:
                 cart_dict_cookie = json.loads(cookies_str)
@@ -219,7 +219,7 @@ class Login(View):
                 # redis 中取的字典key和value都是bytes类型的
                 if sku_id_encode in cart_dict_redis:  # 在计算和比较时一定要类型统一
                     origin_count = cart_dict_redis[sku_id_encode]  # redis的键是bytes类型的
-                    count += int(origin_count.decode())  # 加到cookie里去了==> 好操作
+                    count += int(origin_count)  # 加到cookie里去了==> 好操作 .decode()
                     # 这里合并可能库存不足
                     # goods_model =  GoodsSKU.objects.get(id=sku_id)
                     # if count > goods_model.stock:
@@ -233,7 +233,7 @@ class Login(View):
                 redis_con.hmset('cart_%s' % request.user.id, cart_dict_redis)
             if next:  # next有值
                 if next == '/order/place':
-                    next = '/cart/info'
+                    next = reverse('cart:info')
                 http_response = HttpResponseRedirect(next)
             http_response.delete_cookie('cart')  # 清空购物车cookie
             return http_response
@@ -307,6 +307,7 @@ class AddressView(MyLoginBaseViewMixin, View):
                 zip_code=zip_code,
                 receiver_mobile=recv_mobile,
             )
+
         return redirect(reverse('users:address'))
 
 

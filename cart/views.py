@@ -113,7 +113,7 @@ class AddCart(View):
             for value in cart_dict.values():
                 cart_num += value  # 这里不需要转换 存的时候是int
             cart_str = json.dumps(cart_dict)
-            # 创建response => render JsonResponse HttpResponse HttpRedirect Redirect
+            # 创建response => render JsonResponse HttpResponse HttpRedirect Redirect 五大类都可以返回response
             response = JsonResponse({'code': 0, 'message': '添加购物车成功', 'cart_num': cart_num})
             response.set_cookie('cart', cart_str)
             return response

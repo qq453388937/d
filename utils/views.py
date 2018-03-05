@@ -1,6 +1,9 @@
 # -*- coding:utf-8 -*-
 from django.contrib.auth.decorators import login_required
 from users.views import Address
+from django.views.generic import View
+from django.http import *
+from functools import wraps
 
 
 class MyLoginBaseViewMixin(object):
@@ -37,6 +40,33 @@ class MyLoginBaseViewMixin(object):
         return login_required(view)  # 返回带登陆校验的结果
 
         """ 如果 return  view就是直接return view 不带权限校验的"""
+
+
+def login_required_json(view_func):
+    """验证用户是否登陆和json交互"""
+
+    # 装饰器在装饰函数时,会修改函数内部的__name__属性和文档信息,从而有可能改变函数名称导致请求分发错误
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return JsonResponse({'code': 1, 'message': '用户未登陆'})
+        else:
+            return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+# def login_required_json_again(view_func):
+#     pass
+
+
+
+class MyLoginRequiredJSONMixin(object):
+
+    @classmethod
+    def as_view(cls, **initkwargs):
+        view = super(MyLoginRequiredJSONMixin, cls).as_view(**initkwargs)
+        return login_required_json(view)  # 返回带登陆校验的结果
+
 
 # 耦合度太强
 # class MyLoginBaseView(TemplateView):
