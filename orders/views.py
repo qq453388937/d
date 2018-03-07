@@ -15,7 +15,11 @@ from django.utils import timezone
 # django 事务
 from django.db import transaction
 import time
+# 分页需要导包
 from django.core.paginator import Paginator, Page, EmptyPage
+# settings用到的需要导的包
+from django.conf import settings
+import alipay
 
 
 # 订单确认展示问题
@@ -292,3 +296,151 @@ class UserOrderView(MyLoginBaseViewMixin, View):
         }
 
         return render(request, 'user_center_order.html', context)
+
+
+class PayView(MyLoginRequiredJSONMixin, View):
+    """对接支付宝支付接口"""
+
+    def post(self, request):
+        """接受订单信息order_id 查询订单 创建alipay 调用接口 返回url(json) 跳转"""
+        order_id = request.POST.get('order_id')
+        if not order_id:
+            return JsonResponse({'code': 3, 'message': '缺少订单id'})
+        # 校验订单id
+        try:
+            # 查询该用户提交的该订单号订单,确认是该登陆用户的订单,状态并且是待支付状态,&&支付方式是支付宝
+            order = OrderInfo.objects.get(order_id=order_id,
+                                          user=request.user,
+                                          status=OrderInfo.ORDER_STATUS_ENUM['UNPAID'],  # 类似枚举
+                                          pay_method=OrderInfo.PAY_METHODS_ENUM['ALIPAY']
+                                          )
+        except OrderInfo.DoesNotExist as e:
+            return JsonResponse({'code': 2, 'message': '订单不存在'})
+        # 创建alipay 对象对接支付宝
+        my_alipay = alipay.AliPay(
+            appid=settings.ALIPAY_APPID,
+            app_notify_url=None,  # 默认回调url  测试不要写成空字符串
+            # 自己生产的私钥
+            app_private_key_path=settings.APP_PRIVATE_KEY_PATH,  # 路径也是能读取出来的
+            # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥
+            alipay_public_key_path=settings.ALIPAY_PUBLIC_KEY_PATH,  # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥,
+            sign_type="RSA2",  # RSA 或者 RSA2=>2048 openssl
+            debug=True  # 默认False  True 是沙箱模式
+        )
+        # 电脑网站支付，需要跳转到https://openapi.alipay[dev].com/gateway.do? + order_string
+        order_string = my_alipay.api_alipay_trade_page_pay(
+            out_trade_no=order_id,
+            total_amount=str(order.total_amount),  # 将浮点数转成字符串
+            subject='头条天天生鲜',  # 标题无关太紧要
+            return_url=None,
+            notify_url=None  # 可选, 不填则使用默认notify url
+        )
+        # 生成打开支付宝的url
+        url = settings.ALIPAY_URL + '?' + order_string
+
+        # 响应url给前台(JsonResponse)
+        return JsonResponse({'code': 0, 'message': '支付成功', 'url': url})
+
+
+"""支付宝相关 私钥加密 公钥解密 填写网站公钥"""
+"""returnurl 同步阻塞式 需要公网IP"""
+"""notifyurl 异步非阻塞 成本高,天天生鲜需要公网IP"""
+"""主动查询订单状态alipay.trade.query,前端轮询"""
+
+
+class CheckPayView(MyLoginRequiredJSONMixin, View):
+    """支付宝查询订单,返回支付宝维护的订单id 并且修改订单的状态为待评价"""
+
+    def get(self, request):
+        # 接受订单id
+        order_id = request.GET.get('order_id')
+        if not order_id:
+            return JsonResponse({'code': 2, 'message': '缺少订单id'})
+            # 校验订单id
+        try:
+            # 查询该用户提交的该订单号订单,确认是该登陆用户的订单,状态并且是待支付状态,&&支付方式是支付宝
+            order = OrderInfo.objects.get(order_id=order_id,
+                                          user=request.user,
+                                          # 点带支付去查询待支付,还没支付成功
+                                          status=OrderInfo.ORDER_STATUS_ENUM['UNPAID'],  # 类似枚举
+                                          pay_method=OrderInfo.PAY_METHODS_ENUM['ALIPAY']
+                                          )
+        except OrderInfo.DoesNotExist as e:
+            return JsonResponse({'code': 2, 'message': '订单不存在'})
+        # 创建alipay 对象对接支付宝
+        my_alipay = alipay.AliPay(
+            appid=settings.ALIPAY_APPID,
+            app_notify_url=None,  # 默认回调url  测试不要写成空字符串
+            # 自己生产的私钥
+            app_private_key_path=settings.APP_PRIVATE_KEY_PATH,  # 路径也是能读取出来的
+            # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥
+            alipay_public_key_path=settings.ALIPAY_PUBLIC_KEY_PATH,  # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥,
+            sign_type="RSA2",  # RSA 或者 RSA2=>2048 openssl
+            debug=True  # 默认False  True 是沙箱模式
+        )
+        # 循环查询,直到成功|失败
+        while True:
+            # 调用查询接口,读取code 和trade_status 判断订单状态
+            response_dict = my_alipay.api_alipay_trade_query(order_id)  # 一种接受商家维护的订单id去查 | 也可以接受支付宝维护的订单id去查
+            # 上面的返回值一个字典,包含了支付宝相应给调用者的参数信息 包括 code 和trade_status 和trade_no(支付宝维护的订单id)
+            code = response_dict.get('code')
+            trade_status = response_dict.get('trade_status')
+            if code == '10000' and trade_status == 'TRADE_SUCCESS':
+                order.trade_id = response_dict.get('trade_no')
+                order.status = OrderInfo.ORDER_STATUS_ENUM['UNCOMMENT']
+                order.save()
+                return JsonResponse({'code': 0, 'message': '支付ok'})
+            elif code == '40004' or (code == '10000' and trade_status == 'WAIT_BUYER_PAY'):
+                # 有待商量,继续等待继续查询
+                continue
+            else:
+                # 失败
+                return JsonResponse({'code': 4, 'message': '支付失败'})
+
+
+class OrderCommentView(MyLoginRequiredJSONMixin, View):
+    def get(self, request, order_id):
+        """提供评论页面"""
+        try:
+            order = OrderInfo.objects.get(order_id=order_id, user=request.user)
+        except OrderInfo.DoesNotExist:
+            return redirect(reverse("order:info", args=(1,)))
+
+        order.status_name = OrderInfo.ORDER_STATUS[order.status]
+        order.skus = []
+        # 获取订单关联的所有商品
+        order_skus = order.ordergoods_set.all()
+        for order_sku in order_skus:
+            sku = order_sku.sku  # 找到sku
+            sku.count = order_sku.count  # 数量
+            sku.amount = sku.price * sku.count  # 小计
+            order.skus.append(sku)
+        return render(request, "order_comment.html", {'order': order})
+
+    def post(self, request, order_id):  # post 请求自己会把get中的url中的参数也会传过来,一个url限制2个请求
+        """处理提交评论的post请求"""
+        user = request.user
+        try:
+            order = OrderInfo.objects.get(user=user, order_id=order_id)
+        except OrderInfo.DoesNotExist:
+            return redirect(reverse('order:info', args=(1,)))
+        # 接受total_count的目的是前台知道前台有多少个sku,也可以是认为获取评论条数
+        total_count = request.POST.get('total_count')  # str
+        total_count = int(total_count)
+        for i in range(1, total_count + 1):
+            sku_id = request.POST.get('sku_%d' % i)
+            content = request.POST.get('content_%d' % i)
+            try:
+                # 后台校验每个商品是不是该订单中的
+                order_goods = OrderGoods.objects.get(order=order, sku_id=sku_id)
+            except OrderGoods.DoesNotExist:
+                continue
+            order_goods.comment = content  # 保存每个评论
+            order_goods.save()
+
+            # 清除商品详情缓存
+            # cache.delete("detail_%s" % sku_id)
+        order.status = OrderInfo.ORDER_STATUS_ENUM['FINISHED']
+        order.save()
+        # return redirect(reverse('order:info', kwargs={'page': 1}))
+        return redirect(reverse('order:info',  kwargs={'page': 1}))

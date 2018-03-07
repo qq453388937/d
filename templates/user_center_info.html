@@ -1,42 +1,43 @@
 {% extends 'base.html' %}
 
 {% block body %}
-<div class="main_con clearfix">
-    <div class="left_menu_con clearfix">
-        <h3>用户中心</h3>
-        <ul>
-           <li><a href="{% url 'users:userinfo' %}"  class="active">· 个人信息</a></li>
-            <li><a href="">· 全部订单</a></li>
-            <li><a href="{% url 'users:address' %}">· 收货地址</a></li>
-        </ul>
-    </div>
-    <div class="right_content clearfix">
-        <div class="info_con clearfix">
-            <h3 class="common_title2">基本信息</h3>
-            <ul class="user_info_list">
-                <li><span>用户名：</span>{{ user.username }}</li>
-                <li><span>联系方式：</span>{{ user_lastest_address_model.receiver_mobile }}</li>
-                <li><span>联系地址：</span>{{ user_lastest_address_model.detail_addr }}</li>
+    <div class="main_con clearfix">
+        <div class="left_menu_con clearfix">
+            <h3>用户中心</h3>
+            <ul>
+                <li><a href="{% url 'users:userinfo' %}" class="active">· 个人信息</a></li>
+                <li><a href="{% url 'order:info' 1 %}">· 全部订单</a></li>
+                <li><a href="{% url 'users:address' %}">· 收货地址</a></li>
             </ul>
         </div>
+        <div class="right_content clearfix">
+            <div class="info_con clearfix">
+                <h3 class="common_title2">基本信息</h3>
+                <ul class="user_info_list">
+                    <li><span>用户名：</span>{{ user.username }}</li>
+                    <li><span>联系方式：</span>{{ user_lastest_address_model.receiver_mobile }}</li>
+                    <li><span>联系地址：</span>{{ user_lastest_address_model.detail_addr }}</li>
+                </ul>
+            </div>
 
-        <h3 class="common_title2">最近浏览</h3>
-        <div class="has_view_list">
-            <ul class="goods_type_list clearfix">
-                {% for sku_model in sku_model_list %}
-                <li>         <!-- 传的就是ＧｏｏｄｓＳｋｕ的ｉｄ刚好 -->
-                    <a href="{% url 'goods:detail' sku_model.id %}"><img src="{{ sku_model.default_image.url }}"></a>
-                    <h4><a href="{% url 'goods:detail' sku_model.id %}">{{ sku_model.name }}</a></h4>
-                    <div class="operate">
-                        <span class="prize">￥{{ sku_model.price }}</span>
-                        <span class="unit">{{ sku_model.price }}/{{ sku_model.unit }}</span>
-                        <a href="#" class="add_goods" title="加入购物车"></a>
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
+            <h3 class="common_title2">最近浏览</h3>
+            <div class="has_view_list">
+                <ul class="goods_type_list clearfix">
+                    {% for sku_model in sku_model_list %}
+                        <li>         <!-- 传的就是ＧｏｏｄｓＳｋｕ的ｉｄ刚好 -->
+                            <a href="{% url 'goods:detail' sku_model.id %}"><img
+                                    src="{{ sku_model.default_image.url }}"></a>
+                            <h4><a href="{% url 'goods:detail' sku_model.id %}">{{ sku_model.name }}</a></h4>
+                            <div class="operate">
+                                <span class="prize">￥{{ sku_model.price }}</span>
+                                <span class="unit">{{ sku_model.price }}/{{ sku_model.unit }}</span>
+                                <a href="#" class="add_goods" title="加入购物车"></a>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
     </div>
-</div>
 {% endblock %}
 

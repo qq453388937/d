@@ -118,11 +118,14 @@
 
             <div class="tab_content" id="tab_comment" style="display: none;">
                 {% for order in orders %}
-                    <dl>
-                        <dd>客户：{{ order.username }}&nbsp;&nbsp;&nbsp;时间：{{ order.ctime }}</dd>
-                        <dt>{{ order.comment }}</dt>
-                    </dl>
-                    <hr/>
+                    <!-- empty用不了的情况下子属性可以用if判断  -->
+                    {% if order.comment %}
+                        <dl>
+                            <dd>客户：{{ order.username }}&nbsp;&nbsp;&nbsp;时间：{{ order.ctime }}</dd>
+                            <dt>{{ order.comment }}</dt>
+                        </dl>
+                        <hr/>
+                    {% endif %}
                 {% endfor %}
             </div>
 

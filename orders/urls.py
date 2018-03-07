@@ -12,5 +12,10 @@ urlpatterns = [
     url(r'^commit$', CommitOrderView.as_view(), name='commit'),
     # /order/1   page 第几页
     url(r'^(?P<page>\d+)$', UserOrderView.as_view(), name='info'),
+    # /order/pay POST
+    url(r'^pay$', PayView.as_view(), name='pay'),
+    # /order/checkpay GET
+    url(r'^checkpay$', CheckPayView.as_view(), name='checkpay'),
+    url(r'^comment/(?P<order_id>\d+)$', OrderCommentView.as_view(), name='comment'),
 
 ]

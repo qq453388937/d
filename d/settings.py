@@ -242,3 +242,9 @@ HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 # 每页多少个也可以配, zj 版本特有 ,配置该项目后可以用paginator 直接就返回分页后的对象
 #  paginator.page(１) 可以点出对象
 HAYSTACK_SEARCH_RESULTS_PER_PAGE = 2
+
+# 配置对接支付宝
+ALIPAY_APPID = '2016091100487920'
+APP_PRIVATE_KEY_PATH = os.path.join(BASE_DIR, 'orders/app_private_key.pem')
+ALIPAY_PUBLIC_KEY_PATH = os.path.join(BASE_DIR, 'orders/alipay_pulic_key.pem')
+ALIPAY_URL = 'https://openapi.alipaydev.com/gateway.do'  # 正式环境地址 ALIPAY_URL = 'https://openapi.alipay.com/gateway.do'
