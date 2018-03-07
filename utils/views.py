@@ -1,9 +1,10 @@
 # -*- coding:utf-8 -*-
 from django.contrib.auth.decorators import login_required
 from users.views import Address
-from django.views.generic import View
+from django.views.generic import View  # 捕获参数
 from django.http import *
 from functools import wraps
+from django.db import transaction
 
 
 class MyLoginBaseViewMixin(object):
@@ -45,28 +46,32 @@ class MyLoginBaseViewMixin(object):
 def login_required_json(view_func):
     """验证用户是否登陆和json交互"""
 
-    # 装饰器在装饰函数时,会修改函数内部的__name__属性和文档信息,从而有可能改变函数名称导致请求分发错误
+    # 装饰器在装饰函数时,会修改函数内部的__name__属性和文档__doc__信息,从而有可能改变函数名称导致请求分发错误
     @wraps(view_func)
-    def wrapper(request, *args, **kwargs):
+    def wrapper(request, *args, **kwargs):  # 捕获到View中view函数=>view_func的参数
+        """判断用户是否登陆,如果登陆进入到视图,反之响应json给前端去跳转"""
         if not request.user.is_authenticated():
-            return JsonResponse({'code': 1, 'message': '用户未登陆'})
+            return JsonResponse({'code': 1, 'message': '用户未登陆'})  # 具体看文档
         else:
-            return view_func(request, *args, **kwargs)
+            return view_func(request, *args, **kwargs)  # 调用原来的函数返回
 
     return wrapper
-
-# def login_required_json_again(view_func):
-#     pass
-
 
 
 class MyLoginRequiredJSONMixin(object):
 
     @classmethod
     def as_view(cls, **initkwargs):
-        view = super(MyLoginRequiredJSONMixin, cls).as_view(**initkwargs)
-        return login_required_json(view)  # 返回带登陆校验的结果
+        view = super(MyLoginRequiredJSONMixin, cls).as_view(**initkwargs)  # 返回CommitOrderView类视图的函数视图
+        return login_required_json(view)  # 这里返回响应ajax装饰的自定义的装饰器
 
+
+class TransactionAtomicMixin(object):
+
+    @classmethod
+    def as_view(cls, **initkwargs):
+        view = super(TransactionAtomicMixin, cls).as_view(**initkwargs)  # 返回CommitOrderView类视图的函数视图
+        return transaction.atomic(view)  # 这里返回响应ajax装饰的自定义的装饰器
 
 # 耦合度太强
 # class MyLoginBaseView(TemplateView):

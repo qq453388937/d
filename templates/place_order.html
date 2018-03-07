@@ -110,7 +110,7 @@
                 var order_data = {
                     address_id: address_id,// 收集address id
                     pay_method: $('input[name="pay_style"]:checked').val(),//支付方式
-                    sku_ids: "{{ sku_ids }}",//确认订单页面贯穿过来
+                    sku_ids: "{{ sku_ids }}",//确认订单页面car.html贯穿过来,不能是python列表,js中处理一下
                     csrfmiddlewaretoken: "{{ csrf_token }}"
                 };
                 $.post('{% url 'order:commit' %}', order_data, function (data) {
@@ -122,7 +122,7 @@
                         $('.popup_con').fadeIn('fast', function () {
                             setTimeout(function () {
                                 $('.popup_con').fadeOut('fast', function () {
-                                    location.href = '/orders/1';
+                                    location.href = '/order/1';
                                 });
                             }, 3000)
                         });

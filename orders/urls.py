@@ -6,9 +6,11 @@ from django.conf.urls import url
 from .views import *
 
 urlpatterns = [
-    # /orders/place
+    # /order/place
     url(r'^place$', PlaceOrderView.as_view(), name='place'),
-    # /orders/commit POST
+    # /order/commit POST
     url(r'^commit$', CommitOrderView.as_view(), name='commit'),
+    # /order/1   page 第几页
+    url(r'^(?P<page>\d+)$', UserOrderView.as_view(), name='info'),
 
 ]
