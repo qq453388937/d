@@ -28,10 +28,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '15jeyophvs2h^b2qa5@eihbn1yv2zyjn5rr7#*g76y1y#%&slc'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-# ALLOWED_HOSTS = []
-DEBUG = False
-ALLOWED_HOSTS = ['*']
+DEBUG = True
+ALLOWED_HOSTS = []
+# DEBUG = False
+# ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -53,6 +53,7 @@ INSTALLED_APPS = (
     'orders',
     'cart',
     'djcelery',
+    'rest_framework',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -209,7 +210,7 @@ djcelery.setup_loader()
 # CELERY_IMPORTS = ('celery_tasks.tasks_rabbitmq')
 # # redis 配置
 BROKER_URL = 'redis://127.0.0.1:6379/7'
-CELERY_IMPORTS = ('celery_tasks.tasks_liuqi')  # 'amqp://guest@localhost//'
+CELERY_IMPORTS = ('goods.task')  # 'amqp://guest@localhost//' 必须是应用名称.task
 
 # 指定上传静态文件到fdfs 使用的存储类，FastDFSStorage自定义的存储类 django提供的无法满足
 DEFAULT_FILE_STORAGE = 'utils.fastdfs.storage.FastDFSStorage'  # Storage最后
@@ -248,3 +249,8 @@ ALIPAY_APPID = '2016091100487920'
 APP_PRIVATE_KEY_PATH = os.path.join(BASE_DIR, 'orders/app_private_key.pem')
 ALIPAY_PUBLIC_KEY_PATH = os.path.join(BASE_DIR, 'orders/alipay_pulic_key.pem')
 ALIPAY_URL = 'https://openapi.alipaydev.com/gateway.do'  # 正式环境地址 ALIPAY_URL = 'https://openapi.alipay.com/gateway.do'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination', # 找分页css rest_framework.pagination.
+    'PAGE_SIZE': 2,  # 分页
+}

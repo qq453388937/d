@@ -1,7 +1,9 @@
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, HttpResponse
 
 # Create your views here.
+# django 的view
 from django.views.generic import View
 from django.core.urlresolvers import reverse
 from django_redis import get_redis_connection
@@ -231,7 +233,7 @@ class ListView(BaseCartView):
         # 构造上下文
         context = {}
         # 查询购物车信息 redis
-        cart_num = self.get_cart_num(request) # 直接放到上下文中ok
+        cart_num = self.get_cart_num(request)  # 直接放到上下文中ok
         # if request.user.is_authenticated():
         #     redis_client = get_redis_connection('default')  # alt+enter 自动导入
         #     # hgetall => Return a Python dict of the hash’s name/value pairs
@@ -272,3 +274,108 @@ class ListView(BaseCartView):
 class MySearchView(View):
     def get(self, request):
         return render(request, 'mysearch.html')
+
+
+class GoodViewOld(View):
+    """from django.views.generic import View
+    django.guardian 对象级别的权限
+
+F:\pythonjieshiqi2\Lib\site-packages\pip\compat\__init__.py
+if sys.version_info >= (3,):
+    def console_to_str(s):
+        try:
+            return s.decode(sys.__stdout__.encoding)
+        except UnicodeDecodeError:
+            return s.decode('utf_8') ==> gbk
+
+    """
+    from django.views.generic.base import View
+    from django.views.generic import ListView
+
+    def get(self, request):
+        goods_list = GoodsSKU.objects.all()
+        container = []
+        # for good in goods_list:
+        #     container.append({
+        #         "name": good.name,
+        #         "desc": good.desc,
+        #         "create_time": good.create_time,
+        #         "update_time": good.update_time,
+        #     })
+        # return JsonResponse({"data": container}, safe=False)
+
+        # from django.forms.models import model_to_dict
+        # """model_to_dict 的缺点是不能序列化图片Image_file"""
+        # for good in goods_list:
+        #     container.append(model_to_dict(good))
+        # return JsonResponse({"data": container}, safe=False)
+
+        from django.core.serializers import serialize
+        ret = serialize("json", goods_list)  # 可以序列化所有类型
+        # return JsonResponse(ret,safe=False) # serialize不能使用json返回
+        return HttpResponse(ret, content_type="application/json")
+
+    # return HttpResponse(json.dumps(container), content_type="application/json") # datetime.datetime(2017, 10, 16, 3, 3, 5, 257969, tzinfo=<UTC>) is not JSON serializable
+
+
+from rest_framework.views import APIView
+
+from .myserializer import *
+from rest_framework.response import Response
+from rest_framework import status
+
+
+class GoodAPIView(APIView):
+    def get(self, request, format=None):
+        from django.core.serializers import serialize
+        # goods_list = GoodsSKU.objects.all()
+        goods_list = GoodsSKU.objects.all()[:100]
+        serializer = GoodsSKUSerializer(goods_list, many=True)  # list 多个对象需传many = true ,路径序列化后是完整路径
+        return Response(serializer.data)  # goods_json.data 数据
+
+    def post(self, request):
+        # request.data
+        serializer = GoodsSKUSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()  # GoodsSKUSerializer  => create
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+from rest_framework import mixins
+from rest_framework import generics
+
+#
+# class GoodApiMiXinView(mixins.ListModelMixin, mixins.CreateModelMixin,generics.GenericAPIView):  # GenericAPIView 源码
+#     queryset = GoodsSKU.objects.all()[:10]
+#     serializer_class = GoodsSKUSerializer
+#
+#     def get(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)  # list 是迷信的
+#
+#     def post(self, request, *args, **kwargs):
+#         return self.create(request, *args, **kwargs) # create 是迷信的
+
+
+from rest_framework.generics import ListAPIView
+from rest_framework.pagination import PageNumberPagination  # settings 里面
+
+
+class MySetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 20
+    page_query_param = "ppp"
+
+
+class GoodApiMiXinView(ListAPIView):  # GenericAPIView 源码
+    queryset = GoodsSKU.objects.all()  # generic.py
+    serializer_class = GoodsSKUSerializer  # 分页后结果放到了result里面,域名也加了
+    pagination_class = MySetPagination
+
+
+
+class GoodApiMiXinView(ListAPIView):  # GenericAPIView 源码
+    queryset = GoodsSKU.objects.all()  # generic.py
+    serializer_class = GoodsSKUSerializer  # 分页后结果放到了result里面,域名也加了
+    pagination_class = MySetPagination

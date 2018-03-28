@@ -24,5 +24,6 @@ urlpatterns = [
     url(r'^users/', include('users.urls', namespace='users')),
     url(r'^cart/', include('cart.urls', namespace='cart')),  # 购物车
     url(r'^order/', include('orders.urls', namespace='order')),  # 订单模块
+    url(r'^api-auth/', include('rest_framework.urls')), # drf
     url(r'^', include('goods.urls', namespace='goods')),
 ]

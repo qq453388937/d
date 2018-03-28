@@ -18,7 +18,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer
 # 导入celery中的异步方法
 # from celery_tasks.tasks import send_active_email  # send_active_email方法和远程服务器方法两份
 # 导入刘琦的异步方法
-from celery_tasks.tasks_liuqi import send_active_email
+from celery_tasks.task_liuqi import send_active_email
 # 导入rabbitmq 的celery
 # from celery_tasks.tasks_rabbitmq import send_active_email
 

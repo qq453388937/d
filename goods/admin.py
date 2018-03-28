@@ -3,7 +3,8 @@ from django.contrib import admin
 # Register your models here.
 from django.contrib import admin
 from goods.models import GoodsCategory, Goods, GoodsSKU, IndexPromotionBanner
-from celery_tasks.tasks import generic_static_index_html
+from celery_tasks.tasks import generic_static_index_html # 这一行决定了python manage.py celery worker --loglevel=info去哪里找异步
+# from .task import generic_static_index_html
 # django 缓存工具包导入 cache
 from django.core.cache import cache
 
