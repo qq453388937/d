@@ -295,7 +295,7 @@ if sys.version_info >= (3,):
     def get(self, request):
         goods_list = GoodsSKU.objects.all()
         container = []
-        # for good in goods_list:
+        # for good in goods_list: # image 和datetime 会出错的!!!!!
         #     container.append({
         #         "name": good.name,
         #         "desc": good.desc,
@@ -334,8 +334,8 @@ class GoodAPIView(APIView):
         return Response(serializer.data)  # goods_json.data 数据
 
     def post(self, request):
-        # request.data
-        serializer = GoodsSKUSerializer(data=request.data)
+        # request.data DRF统一取数据
+        serializer = GoodsSKUSerializer(data=request.data)  # 源码
         if serializer.is_valid():
             serializer.save()  # GoodsSKUSerializer  => create
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -345,16 +345,19 @@ class GoodAPIView(APIView):
 from rest_framework import mixins
 from rest_framework import generics
 
-#
-# class GoodApiMiXinView(mixins.ListModelMixin, mixins.CreateModelMixin,generics.GenericAPIView):  # GenericAPIView 源码
-#     queryset = GoodsSKU.objects.all()[:10]
-#     serializer_class = GoodsSKUSerializer
-#
-#     def get(self, request, *args, **kwargs):
-#         return self.list(request, *args, **kwargs)  # list 是迷信的
-#
-#     def post(self, request, *args, **kwargs):
-#         return self.create(request, *args, **kwargs) # create 是迷信的
+
+# GenericAPIView 源码
+class GoodApiMiXinView_old(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+    queryset = GoodsSKU.objects.all()[:10]
+    serializer_class = GoodsSKUSerializer
+
+    # 重载get 方法
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)  # list 是迷信的
+
+    # 重载post方法
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)  # create 是迷信的
 
 
 from rest_framework.generics import ListAPIView
@@ -362,20 +365,81 @@ from rest_framework.pagination import PageNumberPagination  # settings 里面
 
 
 class MySetPagination(PageNumberPagination):
-    page_size = 10
+    page_size = 1
     page_size_query_param = 'page_size'
     max_page_size = 20
     page_query_param = "ppp"
 
 
+#  ListAPIView = mixins.ListModelMixin  +  GenericAPIView
 class GoodApiMiXinView(ListAPIView):  # GenericAPIView 源码
     queryset = GoodsSKU.objects.all()  # generic.py
     serializer_class = GoodsSKUSerializer  # 分页后结果放到了result里面,域名也加了
     pagination_class = MySetPagination
 
 
-
+#  ListAPIView = mixins.ListModelMixin  +  GenericAPIView
 class GoodApiMiXinView(ListAPIView):  # GenericAPIView 源码
     queryset = GoodsSKU.objects.all()  # generic.py
     serializer_class = GoodsSKUSerializer  # 分页后结果放到了result里面,域名也加了
-    pagination_class = MySetPagination
+    pagination_class = MySetPagination  # 分页类
+
+
+"""
+viewsets只是一种基于类的观点，不提供
+任何方法处理，如` get() `，` post() `，等等。而是有方法， 
+如` list() `，` retrieve() `，` create() `，等等。
+user_list = UserViewSet.as_view({'get': 'list'})
+user_detail = UserViewSet.as_view({'get': 'retrieve'})
+
+因为基于类的视图创建了一个闭包
+实例化视图，我们需要完全重新实现` as_view `，
+并稍微修改创建和返回的视图函数
+
+
+
+Set the `.action` attribute on the view,
+depending on the request method.
+ Set the `.action` attribute on the view,
+  depending on the request method.
+在视图上设置“动作”属性，
+根据请求方法。
+"""
+
+"""
+GenericViewSet(viewset) -drf
+GenericAPIView  + mixin -drf
+    APIView             -drf
+      View              -django
+主要是 和mixin搭配的 区别 扮演了的角色,无法享受到过滤,分页等功能
+    ListModelMixin
+    CreateModelMixin
+    RetrieveModelMixin
+    UpdateModelMixin
+    DestroyModelMixin
+"""
+from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend # django filter
+
+# 0.0 router
+class GoodApiViewsetsView(mixins.ListModelMixin, viewsets.GenericViewSet):  # GenericAPIView 源码
+    """viewsets 和 routes 配套使用"""
+    queryset = GoodsSKU.objects.all()  # generic.py
+    serializer_class = GoodsSKUSerializer  # 分页后结果放到了result里面,域名也加了
+    pagination_class = MySetPagination  # 分页类
+    # 需要在view里面设置djangofilterbackend
+    filter_backends = (DjangoFilterBackend,) #有filter 就不需要get_queryset手写了
+    # 配置条件字段
+    # filter_fields = ('name', 'price')
+
+
+    # 自定义配置
+    from .myfilters import MyGoodsSKUFilter
+    filter_class = MyGoodsSKUFilter
+
+    # def get_queryset(self):
+    #     """优先级最高"""
+    #     id_gte = self.request.query_params.get("id_gte", 3)
+    #     query_set = GoodsSKU.objects.filter(id__gte=id_gte)
+    #     return query_set
+

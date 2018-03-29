@@ -54,6 +54,7 @@ INSTALLED_APPS = (
     'cart',
     'djcelery',
     'rest_framework',
+    'django_filters',  # 过滤其
 )
 
 MIDDLEWARE_CLASSES = (
@@ -250,7 +251,10 @@ APP_PRIVATE_KEY_PATH = os.path.join(BASE_DIR, 'orders/app_private_key.pem')
 ALIPAY_PUBLIC_KEY_PATH = os.path.join(BASE_DIR, 'orders/alipay_pulic_key.pem')
 ALIPAY_URL = 'https://openapi.alipaydev.com/gateway.do'  # 正式环境地址 ALIPAY_URL = 'https://openapi.alipay.com/gateway.do'
 
+# DRF 配置文件
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination', # 找分页css rest_framework.pagination.
-    'PAGE_SIZE': 2,  # 分页
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',  # 找分页css rest_framework.pagination.
+    'PAGE_SIZE': 5,  # 分页
+    # django filter
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }

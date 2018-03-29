@@ -26,19 +26,28 @@ from rest_framework import serializers
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """ModelSerializer"""
+
     class Meta:
-        model = GoodsCategory
+        model = GoodsCategory  # 映射GoodsCategory
+        # fields = ('id', 'title', 'code', 'linenos', 'language', 'style')
         fields = "__all__"
 
+
 class GoodsSerializer(serializers.ModelSerializer):
+    """ModelSerializer"""
+
     class Meta:
         model = Goods
+        # fields = ('id', 'title', 'code', 'linenos', 'language', 'style')
         fields = "__all__"
 
 
 class GoodsSKUSerializer(serializers.ModelSerializer):
-    category = CategorySerializer()
-    goods = GoodsSerializer()
+    """ModelSerializer"""
+    category = CategorySerializer()  # 映射GoodsCategory,覆盖外键字段
+    goods = GoodsSerializer()  # 覆盖外键字段
+
     class Meta:
         model = GoodsSKU
         # fields = ('name', 'title', 'unit', 'price', 'stock', 'default_image')
