@@ -55,9 +55,11 @@ INSTALLED_APPS = (
     'djcelery',
     'rest_framework',
     'django_filters',  # 过滤其
+    'corsheaders',  # 跨域请求
 )
 
 MIDDLEWARE_CLASSES = (
+    'corsheaders.middleware.CorsMiddleware',  # csrf 之前
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -67,6 +69,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+
 )
 
 ROOT_URLCONF = 'd.urls'
@@ -254,7 +257,10 @@ ALIPAY_URL = 'https://openapi.alipaydev.com/gateway.do'  # 正式环境地址 AL
 # DRF 配置文件
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',  # 找分页css rest_framework.pagination.
-    'PAGE_SIZE': 5,  # 分页
-    # django filter
+    'PAGE_SIZE': 10,  # 分页
+    # django filter 配置到drf里面
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
+
+# 设置允许跨域访问
+CORS_ORIGIN_ALLOW_ALL = True

@@ -19,5 +19,4 @@ print(response.text)
 import time
 
 with open("%s" % "baidu.com", "wb") as f:
-
-   f.write(response.content)
+    f.write(response.content)

@@ -52,3 +52,32 @@ class GoodsSKUSerializer(serializers.ModelSerializer):
         model = GoodsSKU
         # fields = ('name', 'title', 'unit', 'price', 'stock', 'default_image')
         fields = "__all__"
+
+
+class GoodsCatorySerializer(serializers.ModelSerializer):
+    """商品类别序列化"""
+    # 自链接关注related_name="sub_cate"
+    # sub_cat = GoodsCatorySerializer2lei(many=True) # 不要漏了many=True
+    class Meta:
+        model = GoodsCategory
+        fields = "__all__"
+
+
+
+class GoodsCatorySerializer2lei(serializers.ModelSerializer):
+    """商品类别序列化"""
+    # 自链接关注related_name="sub_cate"
+    # sub_cat =  GoodsCatorySerializer3lei(many=True)
+    class Meta:
+        model = GoodsCategory
+        fields = "__all__"
+
+
+
+class GoodsCatorySerializer3lei(serializers.ModelSerializer):
+    """商品类别序列化"""
+    # 自链接关注related_name="sub_cate"
+    # sub_cat =
+    class Meta:
+        model = GoodsCategory
+        fields = "__all__"

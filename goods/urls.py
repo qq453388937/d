@@ -15,7 +15,8 @@ from .views import GoodApiViewsetsView
 # 3. 创建router对象
 router = DefaultRouter()  # 默认get 绑list post 绑定create
 # 4.注册路由 绑定viewsets,viewsets 重写了as_view并且给request绑定了.action
-router.register(r"^apiaa", GoodApiViewsetsView)
+router.register(r"^apiaa", GoodApiViewsetsView, base_name="apiaa")
+router.register(r'^apicat', GoodCategoryViewset, base_name="category")
 
 # apigg 结果直接放进到url填坑就可以了 非router注册
 apigg = GoodApiViewsetsView.as_view({

@@ -365,7 +365,7 @@ from rest_framework.pagination import PageNumberPagination  # settings 里面
 
 
 class MySetPagination(PageNumberPagination):
-    page_size = 1
+    page_size = 5
     page_size_query_param = 'page_size'
     max_page_size = 20
     page_query_param = "ppp"
@@ -420,6 +420,7 @@ GenericAPIView  + mixin -drf
 """
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend # django filter
+from rest_framework.filters import SearchFilter,OrderingFilter
 
 # 0.0 router
 class GoodApiViewsetsView(mixins.ListModelMixin, viewsets.GenericViewSet):  # GenericAPIView 源码
@@ -427,15 +428,19 @@ class GoodApiViewsetsView(mixins.ListModelMixin, viewsets.GenericViewSet):  # Ge
     queryset = GoodsSKU.objects.all()  # generic.py
     serializer_class = GoodsSKUSerializer  # 分页后结果放到了result里面,域名也加了
     pagination_class = MySetPagination  # 分页类
-    # 需要在view里面设置djangofilterbackend
-    filter_backends = (DjangoFilterBackend,) #有filter 就不需要get_queryset手写了
-    # 配置条件字段
-    # filter_fields = ('name', 'price')
+    # django-filter需要在view里面设置djangofilterbackend
+    filter_backends = (DjangoFilterBackend,SearchFilter,OrderingFilter) #有filter 就不需要get_queryset手写了
+    ordering_fields = ('price', 'sales') # 排序
 
+    # django-filter 配置条件字段
+    # filter_fields = ('name', 'price')
 
     # 自定义配置
     from .myfilters import MyGoodsSKUFilter
+    # 配置fitler_class
     filter_class = MyGoodsSKUFilter
+    search_fields = ('^name','title')
+
 
     # def get_queryset(self):
     #     """优先级最高"""
@@ -443,3 +448,14 @@ class GoodApiViewsetsView(mixins.ListModelMixin, viewsets.GenericViewSet):  # Ge
     #     query_set = GoodsSKU.objects.filter(id__gte=id_gte)
     #     return query_set
 
+
+class GoodCategoryViewset(mixins.ListModelMixin,
+                          mixins.RetrieveModelMixin, # http://127.0.0.1:8000/apicat/2/ RESTFUL 规范不用配置 drf 不用配置url
+                          viewsets.GenericViewSet):
+    queryset = GoodsCategory.objects.all()
+    serializer_class =GoodsCatorySerializer
+"""
+github  django cors headers
+pip install django-cors-headers
+
+"""
