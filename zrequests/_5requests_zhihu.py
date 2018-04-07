@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-import requests,time
+import requests, time
 
 url = "https://www.zhihu.com/"
 
@@ -20,3 +20,6 @@ print(response.text)
 # with open("%s" % "baidu.com", "wb") as f:
 #
 #    f.write(response.content)
+#
+
+# 使用手感还可以

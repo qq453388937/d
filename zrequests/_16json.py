@@ -30,4 +30,6 @@ with open("data.json", "w", encoding="utf-8") as f:
 
 with open("data.json", "r", encoding="utf-8") as f:
     ret = json.load(f)
+    print("解析ret")
     print(ret)
+

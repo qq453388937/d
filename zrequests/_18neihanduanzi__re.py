@@ -46,6 +46,7 @@ class NeiHan(object):
 
     def parse_data(self, html):
         """格式化数据,返回处理后的数据和时间戳"""
+        # 根据正则分组来提取段子数据,findall只会提取括号中的数据
         re_array = re.findall(
             r'<a\s*target="_blank"\s*class="image share_url"\s*href="(.*?)"\s*data-group-id=".*?" >.*?<p>(.*?)</p>',
             html, re.S)  # 如果分组会放到一个元祖里[(group1,group2,group3)]

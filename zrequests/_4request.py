@@ -10,7 +10,7 @@ headers = {
 data = {
     "wd": "python"
 }
-
+# param get传参
 response = requests.get(url, headers=headers, params=data)
 
 print(response.status_code)
