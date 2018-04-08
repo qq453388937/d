@@ -24,4 +24,5 @@ def func():
     pass
 
 t = threading.Thread(target=func)
+#  ['di:mən]
 t.setDaemon(True) # 设置为守护进程,该线程会跟随主线程的退出而退出
