@@ -20,7 +20,7 @@ class Douyu(object):
         for node in node_list:
             data = dict()
             # 存储属性
-            data["title"] = node.find_element_by_xpath("./div/div/h3").text
+            data["title"] = node.find_element_by_xpath("./div/div/h3").text # ｔｅｘｔ文本
             data["catagory"] = node.find_element_by_xpath("./div/div/span").text
             data["owner"] = node.find_element_by_xpath("./div/p/span[1]").text
             data["num"] = node.find_element_by_xpath("./div/p/span[2]").text
